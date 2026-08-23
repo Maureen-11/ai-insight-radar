@@ -1,5 +1,11 @@
 # AI Insight Radar
 
+> AI market intelligence and model-evaluation workbench with traceable public evidence and human review.
+
+[中文](#中文说明) · [English](#english)
+
+## 中文说明
+
 面向面试展示的「AI 行业情报与模型评测平台」静态 Demo。它的重点不是堆新闻，而是清楚展示一条研究判断如何从公开信号进入人工复核，并落到可执行行动。
 
 ## 运行
@@ -81,3 +87,58 @@ node --check signal-detail.js
 - EvalScope / OpenCompass 是后续可接入的开源评测后端；接入时应保留各自许可证与来源说明。
 - 示例来源均为公开链接。`signals.json` 的判断是面试 Demo 中经过人工整理的研究样例，应在正式使用前按链接、日期和原始资料复核。
 - 不提交 API Key、Token、真实访谈原文或未经授权的数据。
+
+---
+
+## English
+
+### What this is
+
+AI Insight Radar is a static, interview-ready workbench for AI market intelligence and model evaluation. It turns public signals into structured, reviewable research rather than presenting an untraceable news feed.
+
+### Read this project in English
+
+Start here:
+
+1. **Signal stream** — each reviewed signal states a conclusion, its concrete impact, the recommended next action, and the source link.
+2. **Signal detail** — open `signal.html?id=signal-001` to see why it matters now, evidence, open questions, confidence, priority, and review status.
+3. **Weekly report** — generated from reviewed signals; every judgement links back to a dated public source.
+4. **Model evaluation** — a clearly labelled local demo of comparing quality, latency, and cost on the same scenario. It is not an official benchmark result.
+
+### Quick start
+
+No Node build or API key is required.
+
+```powershell
+python -m http.server 4173
+```
+
+Open `http://127.0.0.1:4173/`. Use an HTTP server instead of opening the HTML file directly, because browsers block local JSON requests.
+
+### Public-source workflow
+
+```text
+Public RSS / Atom metadata
+  → data/inbox.json (needs review)
+  → human fact check and research judgement
+  → data/signals.json (displayed, reviewed signals)
+```
+
+Run the manual collector with:
+
+```powershell
+python scripts/collect_public_sources.py
+```
+
+It uses no credentials or cloud model. It stores only public metadata (title, date, URL, and a short plain-text summary), deduplicates by URL/hash, and never promotes an item to a displayed signal automatically.
+
+### Scope and data policy
+
+- The UI, static data contract, collector, and rule templates are original project code under the [MIT License](LICENSE).
+- EvalScope and OpenCompass are planned integration paths, not copied dependencies in this repository.
+- Sample model results are local demo records. The interview page is a simulated input template, not a real expert interview.
+- Do not commit API keys, tokens, private data, full third-party articles, or unapproved interview transcripts.
+
+### Why there is no package
+
+This repository is a static site, not an installable SDK or library. Therefore it intentionally has no GitHub Package. The published release marks a portfolio version of the research workbench, not a package distribution.
