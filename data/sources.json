@@ -1,0 +1,6 @@
+[
+  {"id":"evalscope-releases","name":"EvalScope Releases","url":"https://github.com/modelscope/evalscope/releases.atom","type":"GitHub Releases / Atom","category":"生态","entities":["ModelScope","EvalScope"],"enabled":true},
+  {"id":"opencompass-releases","name":"OpenCompass Releases","url":"https://github.com/open-compass/opencompass/releases.atom","type":"GitHub Releases / Atom","category":"生态","entities":["OpenCompass"],"enabled":true},
+  {"id":"transformers-releases","name":"Hugging Face Transformers Releases","url":"https://github.com/huggingface/transformers/releases.atom","type":"GitHub Releases / Atom","category":"模型","entities":["Hugging Face","Transformers"],"enabled":true},
+  {"id":"huggingface-blog","name":"Hugging Face Blog","url":"https://huggingface.co/blog/feed.xml","type":"RSS","category":"产品","entities":["Hugging Face"],"enabled":true}
+]

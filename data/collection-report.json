@@ -1,0 +1,9 @@
+{
+  "collectedAt": "2026-08-23T17:49:02.292455Z",
+  "configuredSources": 4,
+  "inboxBefore": 876,
+  "added": 0,
+  "inboxAfter": 876,
+  "failures": [],
+  "note": "失败来源不会清空已有 inbox；所有条目均需人工复核后才能进入 signals.json。"
+}

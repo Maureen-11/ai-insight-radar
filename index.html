@@ -3,229 +3,37 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="AI Insight Radar：AI 行业情报与模型评测平台面试展示 Demo" />
-    <title>AI Insight Radar · 行业情报与模型评测</title>
+    <meta name="description" content="AI Insight Radar：可追溯的 AI 行业研究工作台" />
+    <title>AI Insight Radar · 研究工作台</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand-block">
-          <div class="brand-mark">AI<span>·</span>IR</div>
-          <div>
-            <div class="brand-name">Insight Radar</div>
-            <div class="brand-caption">AI 行业情报工作台</div>
-          </div>
-        </div>
-
-        <div class="workspace-switcher">
-          <div class="eyebrow">WORKSPACE</div>
-          <button class="workspace-button" type="button">
-            <span class="workspace-dot"></span>
-            <span>AI 行业观察组</span>
-            <span class="chevron">⌄</span>
-          </button>
-        </div>
-
-        <nav class="side-nav" aria-label="主导航">
-          <div class="nav-section-label">核心工作区</div>
-          <button class="nav-item is-active" data-view="dashboard" type="button">
-            <span class="nav-icon">⌁</span><span>情报雷达</span><span class="nav-count">24</span>
-          </button>
-          <button class="nav-item" data-view="eval" type="button">
-            <span class="nav-icon">◈</span><span>模型评测</span><span class="nav-count">3</span>
-          </button>
-          <button class="nav-item" data-view="interview" type="button">
-            <span class="nav-icon">◌</span><span>访谈纪要</span>
-          </button>
-          <button class="nav-item" data-view="report" type="button">
-            <span class="nav-icon">▤</span><span>策略周报</span><span class="nav-count nav-count-muted">1</span>
-          </button>
-
-          <div class="nav-section-label nav-section-spaced">数据与设置</div>
-          <button class="nav-item" data-view="sources" type="button">
-            <span class="nav-icon">⊙</span><span>信源管理</span>
-          </button>
-          <button class="nav-item" data-view="settings" type="button">
-            <span class="nav-icon">⚙</span><span>工作台设置</span>
-          </button>
+    <div class="shell">
+      <aside class="sidebar" aria-label="工作台导航">
+        <a class="brand" href="#radar"><span class="brand-mark">AI</span><span><strong>Insight Radar</strong><small>行业研究工作台</small></span></a>
+        <nav>
+          <a class="nav-link is-active" href="#radar" data-view="radar"><span>◉</span>情报雷达</a>
+          <a class="nav-link" href="#report" data-view="report"><span>▤</span>策略周报</a>
+          <a class="nav-link" href="#eval" data-view="eval"><span>◫</span>模型评测</a>
+          <a class="nav-link" href="#interview" data-view="interview"><span>◌</span>访谈纪要</a>
+          <a class="nav-link" href="#sources" data-view="sources"><span>⌁</span>公开信源</a>
         </nav>
-
-        <div class="sidebar-bottom">
-          <div class="source-health-card">
-            <div class="health-header">
-              <span>信源健康度</span><span class="health-score">96%</span>
-            </div>
-            <div class="health-bar"><span></span></div>
-            <div class="health-meta"><span>12 个活跃信源</span><span>刚刚更新</span></div>
-          </div>
-          <div class="profile-chip">
-            <div class="avatar">W</div>
-            <div><strong>Researcher</strong><span>个人工作台</span></div>
-            <span class="more">•••</span>
-          </div>
-        </div>
+        <section class="pipeline-card"><p>研究流程</p><strong>公开信号 → 人工复核 → 行动建议</strong><span id="pipeline-status">读取本地数据中…</span></section>
       </aside>
-
-      <main class="main-content">
-        <header class="topbar">
-          <div class="breadcrumb"><span>工作台</span><span class="slash">/</span><strong id="breadcrumb-label">情报雷达</strong></div>
-          <div class="topbar-actions">
-            <label class="search-box" for="global-search">
-              <span class="search-icon">⌕</span>
-              <input id="global-search" type="search" placeholder="搜索事件、模型或厂商…" autocomplete="off" />
-              <kbd>⌘ K</kbd>
-            </label>
-            <button class="icon-button" type="button" aria-label="通知"><span class="notification-dot"></span>♢</button>
-            <button class="refresh-button" id="refresh-data" type="button"><span class="refresh-icon">↻</span>刷新数据</button>
-          </div>
-        </header>
-
-        <div class="view-stack">
-          <section class="view is-visible" id="dashboard-view" data-view-panel="dashboard">
-            <div class="page-heading heading-with-action">
-              <div>
-                <div class="eyebrow accent-eyebrow">MONDAY · 08.24.2026</div>
-                <h1>早上好，今天先看哪些信号？</h1>
-                <p>把分散的行业动态，整理成团队可以行动的判断。</p>
-              </div>
-              <div class="heading-actions">
-                <button class="secondary-button" type="button" data-toast="已复制本周情报摘要">复制摘要</button>
-                <button class="primary-button" type="button" data-view-jump="report">查看本周研判 <span>→</span></button>
-              </div>
-            </div>
-
-            <div class="metric-grid">
-              <article class="metric-card">
-                <div class="metric-label">本周新增信号 <span class="metric-info">i</span></div>
-                <div class="metric-value">24</div>
-                <div class="metric-foot positive"><span>↗ 18.6%</span><span>vs. 上周</span></div>
-                <div class="metric-sparkline sparkline-orange"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              </article>
-              <article class="metric-card">
-                <div class="metric-label">高优先级动态 <span class="metric-info">i</span></div>
-                <div class="metric-value">07</div>
-                <div class="metric-foot warning"><span>↑ 2 条</span><span>需要跟进</span></div>
-                <div class="metric-sparkline sparkline-red"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              </article>
-              <article class="metric-card">
-                <div class="metric-label">跟踪中的厂商 <span class="metric-info">i</span></div>
-                <div class="metric-value">12</div>
-                <div class="metric-foot neutral"><span>— 0 家</span><span>较上周</span></div>
-                <div class="logo-pile"><span>O</span><span>A</span><span>G</span><span>D</span><span>Q</span><b>+7</b></div>
-              </article>
-              <article class="metric-card">
-                <div class="metric-label">已评测模型 <span class="metric-info">i</span></div>
-                <div class="metric-value">03</div>
-                <div class="metric-foot positive"><span>↗ 1 个</span><span>本周新增</span></div>
-                <div class="mini-progress"><span style="width: 72%"></span></div>
-              </article>
-            </div>
-
-            <div class="dashboard-grid">
-              <article class="panel signal-panel">
-                <div class="panel-header">
-                  <div>
-                    <div class="eyebrow">SIGNAL STREAM</div>
-                    <h2>行业信号流</h2>
-                  </div>
-                  <div class="panel-header-actions">
-                    <div class="filter-pills" id="signal-filters">
-                      <button class="filter-pill is-selected" data-filter="全部" type="button">全部</button>
-                      <button class="filter-pill" data-filter="模型" type="button">模型</button>
-                      <button class="filter-pill" data-filter="产品" type="button">产品</button>
-                      <button class="filter-pill" data-filter="资本" type="button">资本</button>
-                    </div>
-                    <button class="more-button" type="button" data-toast="更多筛选即将开放">•••</button>
-                  </div>
-                </div>
-                <div class="signal-search-row">
-                  <span>显示高价值信号</span>
-                  <label class="inline-search" for="signal-search"><span>⌕</span><input id="signal-search" type="search" placeholder="过滤当前列表" /></label>
-                </div>
-                <div id="signal-list" class="signal-list"></div>
-                <button class="load-more-button" type="button" data-toast="已加载全部公开来源样例">加载更多信号 <span>↓</span></button>
-              </article>
-
-              <div class="right-rail">
-                <article class="panel trend-panel">
-                  <div class="panel-header">
-                    <div><div class="eyebrow">SIGNAL MOMENTUM</div><h2>信号动能</h2></div>
-                    <button class="select-button" type="button">过去 7 天 <span>⌄</span></button>
-                  </div>
-                  <div class="trend-chart" aria-label="过去七天信号趋势">
-                    <div class="chart-y-labels"><span>30</span><span>20</span><span>10</span><span>0</span></div>
-                    <div class="bars"><i style="height: 37%" data-label="一"></i><i style="height: 52%" data-label="二"></i><i style="height: 43%" data-label="三"></i><i style="height: 69%" data-label="四"></i><i style="height: 58%" data-label="五"></i><i style="height: 82%" data-label="六"></i><i class="bar-today" style="height: 94%" data-label="今"></i></div>
-                    <div class="chart-x-labels"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>今</span></div>
-                  </div>
-                  <div class="trend-footer"><span><b class="legend-dot orange"></b>新增信号</span><strong>+18.6%</strong></div>
-                </article>
-                <article class="panel competitors-panel">
-                  <div class="panel-header"><div><div class="eyebrow">COMPETITIVE MAP</div><h2>重点厂商</h2></div><button class="text-button" data-view-jump="sources" type="button">查看全部 →</button></div>
-                  <div id="vendor-list" class="vendor-list"></div>
-                </article>
-              </div>
-            </div>
-
-            <article class="panel insight-panel">
-              <div class="insight-main">
-                <div class="eyebrow">WEEKLY READOUT · AI PLATFORM</div>
-                <h2>本周研判：竞争重心从“参数领先”转向“可交付的工作流”</h2>
-                <p>模型发布节奏仍然密集，但能形成产品差异的信号，正在更多来自工具调用、长上下文、成本控制和行业工作流的组合。</p>
-                <div class="insight-tags"><span>趋势判断</span><span>产品策略</span><span>需验证</span></div>
-              </div>
-              <div class="insight-evidence">
-                <div class="eyebrow">EVIDENCE TRAIL</div>
-                <div class="evidence-item"><span class="evidence-number">01</span><span>模型 API 定价与上下文窗口同时成为采购比较项</span></div>
-                <div class="evidence-item"><span class="evidence-number">02</span><span>开源模型的部署门槛继续下降，场景评测更重要</span></div>
-                <button class="outline-button" type="button" data-view-jump="report">打开证据链 <span>↗</span></button>
-              </div>
-            </article>
-          </section>
-
-          <section class="view" id="eval-view" data-view-panel="eval">
-            <div class="page-heading heading-with-action">
-              <div><div class="eyebrow accent-eyebrow">MODEL EVALUATION LAB</div><h1>模型评测台</h1><p>用同一套场景题比较质量、速度与成本，减少“只看排行榜”的误判。</p></div>
-              <div class="heading-actions"><button class="secondary-button" type="button" data-toast="评测配置已复制到剪贴板">复制配置</button><button class="primary-button" type="button" data-toast="本地评测任务已加入队列">运行一次评测 <span>▶</span></button></div>
-            </div>
-            <div class="eval-notice"><span class="notice-icon">i</span><div><strong>面试 Demo 数据集</strong><span>当前结果是本地演示记录，不代表模型官方成绩；替换 <code>data/eval-scenarios.json</code> 即可接入真实 EvalScope 运行。</span></div><span class="demo-badge">DEMO</span></div>
-            <div class="eval-toolbar">
-              <div class="scenario-tabs" id="scenario-tabs"><button class="scenario-tab is-selected" data-scenario="知识库问答" type="button">企业知识库问答</button><button class="scenario-tab" data-scenario="长文档总结" type="button">长文档总结</button><button class="scenario-tab" data-scenario="结构化抽取" type="button">结构化信息抽取</button></div>
-              <div class="eval-meta"><span>20 条测试题</span><span>·</span><span>最近运行 12 分钟前</span></div>
-            </div>
-            <div class="eval-grid">
-              <article class="panel eval-table-panel"><div class="panel-header"><div><div class="eyebrow">COMPARISON</div><h2 id="eval-title">企业知识库问答 · 模型对比</h2></div><button class="more-button" type="button" data-toast="评测字段已锁定为展示版">•••</button></div><div class="table-wrap"><table class="eval-table"><thead><tr><th>模型</th><th>质量 <span class="sort">↕</span></th><th>引用准确率</th><th>延迟 p50</th><th>成本 / 题</th><th>推荐度</th><th></th></tr></thead><tbody id="eval-table-body"></tbody></table></div><div class="table-foot"><span>数据口径：固定 20 题 · 同一提示模板 · 温度 0</span><button class="text-button" type="button" data-toast="已打开评测方法说明">查看方法说明 →</button></div></article>
-              <article class="panel eval-detail-panel"><div class="panel-header"><div><div class="eyebrow">SCENARIO SCORE</div><h2>场景得分</h2></div><span class="status-chip status-chip-green">可复现</span></div><div class="radar-wrap"><div class="radar-chart"><span class="radar-axis axis-one"></span><span class="radar-axis axis-two"></span><span class="radar-axis axis-three"></span><span class="radar-axis axis-four"></span><span class="radar-axis axis-five"></span><div class="radar-shape"></div><div class="radar-shape radar-shape-inner"></div><span class="radar-label label-top">质量</span><span class="radar-label label-right">引用</span><span class="radar-label label-bottom-right">成本</span><span class="radar-label label-bottom-left">速度</span><span class="radar-label label-left">稳定</span></div></div><div class="score-legend"><span><b class="legend-dot orange"></b>当前最佳 · Qwen2.5-Max</span><span><b class="legend-dot blue"></b>场景均值</span></div><div class="eval-callout"><strong>值得继续验证</strong><p>Qwen2.5-Max 在引用准确率和成本之间呈现较好的平衡；建议追加 10 条长尾问题验证鲁棒性。</p></div></article>
-            </div>
-            <article class="panel evaluation-notes"><div class="panel-header"><div><div class="eyebrow">RESEARCH NOTES</div><h2>评测结论草稿</h2></div><button class="outline-button" type="button" data-toast="结论已加入本周策略周报">加入周报 <span>＋</span></button></div><div class="notes-grid"><div class="note-block"><span class="note-index">01</span><div><strong>质量不是唯一排序维度</strong><p>在企业问答场景，需要同时看答案是否引用正确、是否拒答得当，以及单题成本是否可接受。</p></div></div><div class="note-block"><span class="note-index">02</span><div><strong>评测集要贴近业务</strong><p>通用 benchmark 只能作为底线；岗位需要的是把业务问题转成可重复的场景测试。</p></div></div><div class="note-block"><span class="note-index">03</span><div><strong>把异常样本单独留档</strong><p>所有低分样本保留原问题、模型回答和人工判断，作为下一轮提示词与产品策略输入。</p></div></div></div></article>
-          </section>
-
-          <section class="view" id="interview-view" data-view-panel="interview">
-            <div class="page-heading heading-with-action"><div><div class="eyebrow accent-eyebrow">INTERVIEW INTELLIGENCE</div><h1>访谈纪要</h1><p>从转写文本中提取观点、证据与可执行的下一步，而不是只做摘要。</p></div><div class="heading-actions"><button class="secondary-button" id="open-transcript" type="button">导入转写文本</button><button class="primary-button" type="button" data-toast="纪要模板已下载">下载模板 <span>↓</span></button></div></div>
-            <div class="interview-layout"><article class="panel interview-list-panel"><div class="panel-header"><div><div class="eyebrow">NOTEBOOK</div><h2>纪要工作区</h2></div><button class="more-button" type="button">•••</button></div><div class="interview-filter"><button class="filter-pill is-selected" type="button">全部</button><button class="filter-pill" type="button">待整理</button><button class="filter-pill" type="button">已归档</button></div><div class="interview-cards"><button class="interview-card is-selected" type="button"><span class="note-type">模拟输入 · 产品访谈</span><strong>企业 AI 采购决策：从“模型能力”到“交付确定性”</strong><span class="note-card-meta"><span>2026.08.22</span><span class="status-chip status-chip-amber">待复核</span></span></button><button class="interview-card" type="button"><span class="note-type">模板</span><strong>新建一份访谈纪要</strong><span class="note-card-meta"><span>导入转写即可开始</span><span class="plus-circle">＋</span></span></button></div><div class="privacy-note"><span>⌁</span><span>访谈原文仅保存在本地浏览器草稿中，不会自动上传。</span></div></article><article class="panel interview-detail-panel"><div class="interview-detail-header"><div><div class="eyebrow">STRUCTURED NOTE · DEMO</div><h2>企业 AI 采购决策：从“模型能力”到“交付确定性”</h2><div class="interview-meta"><span>对象：企业 AI 产品负责人（模拟输入）</span><span>时长：38 min</span><span>状态：待复核</span></div></div><button class="icon-button" type="button" data-toast="已标记为重点纪要">☆</button></div><div class="transcript-disclaimer"><span class="notice-icon">!</span><span>这是结构化模板演示，不是真实专家引语；替换为授权的真实转写后再用于面试作品。</span></div><div class="note-sections"><section class="note-section"><div class="section-marker marker-orange"></div><div><div class="note-section-title"><span>核心判断</span><span class="confidence">置信度 0.78</span></div><p>采购方越来越关心“能不能稳定交付到现有流程”，而不仅是公开 benchmark 的最高分。</p></div></section><section class="note-section"><div class="section-marker marker-blue"></div><div><div class="note-section-title"><span>关键观点</span><span class="section-count">3 条</span></div><ul><li>模型选型要和数据治理、权限、审计一起评估。</li><li>一周内能跑出可复现的业务评测，比一次性的 Demo 更有说服力。</li><li>成本、响应速度和故障降级会直接影响最终采购。</li></ul></div></section><section class="note-section"><div class="section-marker marker-green"></div><div><div class="note-section-title"><span>待验证问题</span><span class="section-count">2 条</span></div><div class="question-list"><span>是否有统一的模型路由策略？</span><span>长尾问题的人工兜底率是多少？</span></div></div></section><section class="note-section"><div class="section-marker marker-purple"></div><div><div class="note-section-title"><span>行动项</span><span class="section-count">3 项</span></div><div class="action-list"><label><input type="checkbox" checked />补充 10 条真实业务问题</label><label><input type="checkbox" />对比云端与本地部署成本</label><label><input type="checkbox" />在周报中加入采购决策框架</label></div></div></section></div><div class="detail-footer"><span>最后编辑：刚刚</span><button class="text-button" type="button" data-toast="已复制结构化纪要">复制纪要 →</button></div></article></div>
-          </section>
-
-          <section class="view" id="report-view" data-view-panel="report">
-            <div class="page-heading heading-with-action"><div><div class="eyebrow accent-eyebrow">STRATEGIC READOUT · WEEK 34</div><h1>策略周报</h1><p>把信号、评测和访谈放进同一条证据链，形成可以讨论的建议。</p></div><div class="heading-actions"><button class="secondary-button" id="export-report" type="button">导出 Markdown</button><button class="primary-button" type="button" data-toast="分享链接已复制">分享周报 <span>↗</span></button></div></div>
-            <article class="report-cover"><div class="report-cover-left"><div class="eyebrow">AI INDUSTRY BRIEFING</div><h2>当模型能力逐渐趋同，<br /><em>工作流才是新的护城河。</em></h2><p>本期覆盖 12 个公开信源、24 条新增信号、3 个模型评测样本，并整理 1 份访谈纪要模板。</p><div class="report-byline"><div class="avatar avatar-small">W</div><div><strong>AI 行业观察组</strong><span>生成于 2026.08.24 · 本地演示版</span></div></div></div><div class="report-cover-right"><div class="cover-orbit orbit-one"></div><div class="cover-orbit orbit-two"></div><div class="cover-orbit orbit-three"></div><div class="cover-core">AI<br /><span>IR</span></div><span class="orbit-label label-a">MODEL</span><span class="orbit-label label-b">PRODUCT</span><span class="orbit-label label-c">SCENARIO</span></div></article>
-            <div class="report-grid"><article class="panel report-main"><div class="report-section-header"><span class="section-number">01</span><div><div class="eyebrow">EXECUTIVE SUMMARY</div><h2>给团队的三个判断</h2></div></div><div class="judgement-list"><div class="judgement"><span class="judgement-line"></span><div><strong>从“谁的模型更强”转向“谁能把闭环交付”</strong><p>公开发布的能力差距在缩小，企业真正比较的是数据接入、工具调用、权限审计与成本控制组成的交付链。</p><div class="source-row"><span>证据 01</span><a href="https://openai.com/news/" target="_blank" rel="noreferrer">OpenAI Newsroom ↗</a><a href="https://www.anthropic.com/news" target="_blank" rel="noreferrer">Anthropic News ↗</a></div></div></div><div class="judgement"><span class="judgement-line"></span><div><strong>开源模型的机会在“可控”和“可改”，不只是免费</strong><p>本地部署、模型路由和私有数据处理让开源模型更适合成为工作流的一部分；需要用业务题验证，而不是只看通用榜单。</p><div class="source-row"><span>证据 02</span><a href="https://github.com/deepseek-ai/DeepSeek-V3" target="_blank" rel="noreferrer">DeepSeek GitHub ↗</a><a href="https://huggingface.co/blog" target="_blank" rel="noreferrer">Hugging Face Blog ↗</a></div></div></div><div class="judgement"><span class="judgement-line"></span><div><strong>情报团队的价值在“把变化翻译成动作”</strong><p>每条动态都应该回答：影响谁、需要验证什么、下周是否改变产品或采购决策。</p><div class="source-row"><span>证据 03</span><a href="https://qwenlm.github.io/blog/" target="_blank" rel="noreferrer">Qwen Blog ↗</a><a href="https://blog.google/technology/ai/" target="_blank" rel="noreferrer">Google AI Blog ↗</a></div></div></div></div><div class="report-callout"><span class="callout-icon">✦</span><div><strong>建议下周动作</strong><p>用 30 条真实业务问题建立第一版“场景评测集”，再决定模型路由和产品集成优先级。</p></div></div></article><aside class="report-side"><article class="panel report-stat-panel"><div class="eyebrow">REPORT QUALITY</div><div class="report-quality"><strong>0.86</strong><span>证据完整度</span></div><div class="quality-bar"><span style="width: 86%"></span></div><div class="quality-meta"><span>24 条信号</span><span>18 条已核验</span></div></article><article class="panel source-panel"><div class="panel-header"><div><div class="eyebrow">SOURCE MIX</div><h2>信源构成</h2></div><span class="status-chip status-chip-green">健康</span></div><div class="source-mix"><div class="donut-chart"><span>12</span><small>信源</small></div><div class="mix-legend"><span><i class="mix-dot mix-orange"></i>厂商官方 <b>42%</b></span><span><i class="mix-dot mix-blue"></i>论文/社区 <b>33%</b></span><span><i class="mix-dot mix-green"></i>媒体/市场 <b>25%</b></span></div></div></article><article class="panel next-panel"><div class="eyebrow">NEXT CHECKPOINT</div><h2>下一次验证</h2><p>长尾问题鲁棒性 · 10 条</p><div class="checkpoint-date"><span>08.27</span><span>周四</span></div></article></aside></div>
-          </section>
-
-          <section class="view" id="sources-view" data-view-panel="sources"><div class="page-heading"><div><div class="eyebrow accent-eyebrow">SOURCE CATALOG</div><h1>信源管理</h1><p>把公开、可追溯、可复核作为每条情报的起点。</p></div></div><div class="source-catalog-grid" id="source-catalog"></div></section>
-          <section class="view" id="settings-view" data-view-panel="settings"><div class="page-heading"><div><div class="eyebrow accent-eyebrow">WORKSPACE SETTINGS</div><h1>工作台设置</h1><p>面试 Demo 默认使用本地静态数据；后续可替换为 RSS、EvalScope 和数据库。</p></div></div><div class="settings-grid"><article class="panel settings-card"><div class="eyebrow">DATA PIPELINE</div><h2>数据管线</h2><label class="setting-row"><span>公开来源抓取</span><input type="checkbox" checked /></label><label class="setting-row"><span>保留证据链接</span><input type="checkbox" checked /></label><label class="setting-row"><span>运行前人工确认</span><input type="checkbox" checked /></label></article><article class="panel settings-card"><div class="eyebrow">EVALUATION</div><h2>评测口径</h2><div class="setting-select">默认场景集 <strong>企业知识库问答</strong><span>⌄</span></div><div class="setting-select">评分方式 <strong>规则 + 人工复核</strong><span>⌄</span></div><div class="setting-select">结果存储 <strong>本地 JSON</strong><span>⌄</span></div></article></div></section>
-        </div>
+      <main>
+        <header class="topbar"><div><span class="muted">AI 行业观察组</span><span class="dot">/</span><strong id="crumb">情报雷达</strong></div><label class="search"><span>⌕</span><input id="global-search" type="search" placeholder="搜索厂商、主题或结论" /></label></header>
+        <section class="view is-visible" id="radar-view">
+          <div class="hero"><div><p class="eyebrow">研究工作台 · 人工复核版</p><h1>把公开动态变成可行动的研究判断。</h1><p class="lead">每条情报先给结论、再说明影响和下一步；原始来源是可追溯的证据入口。</p></div><a class="button primary" href="#report" data-view="report">阅读本周周报 <span>→</span></a></div>
+          <div class="metrics" id="metrics" aria-label="情报概览"></div>
+          <div class="workbench"><section class="panel signal-panel"><div class="panel-heading signal-heading"><div><p class="eyebrow">已复核情报</p><h2>行业信号流</h2></div><div class="filters" id="filters" aria-label="情报分类筛选"><button class="filter is-selected" data-filter="全部">全部</button><button class="filter" data-filter="模型">模型</button><button class="filter" data-filter="产品">产品</button><button class="filter" data-filter="生态">生态</button></div></div><div class="list-context"><span>默认按优先级与人工复核状态展示</span><span id="signal-count"></span></div><div id="signal-list" class="signal-list" aria-live="polite"></div></section><aside class="rail"><section class="panel"><div class="panel-heading"><div><p class="eyebrow">本周研究结论</p><h2>变化不止于新闻</h2></div></div><div id="weekly-preview" class="weekly-preview"></div><a class="text-link" href="#report" data-view="report">查看完整证据链 →</a></section><section class="panel"><div class="panel-heading"><div><p class="eyebrow">重点厂商</p><h2>需要持续观察</h2></div></div><div id="vendor-list" class="vendor-list"></div></section></aside></div>
+        </section>
+        <section class="view" id="report-view"><div class="page-title"><p class="eyebrow">策略周报 · 自动从已复核信号生成</p><h1>AI 行业策略周报</h1><p class="lead">结论、证据和下周行动严格对应；这不是自动发布的新闻摘要。</p></div><div class="report-layout"><article class="panel report-main"><div class="panel-heading"><div><p class="eyebrow">三个核心判断</p><h2>本周需要做的取舍</h2></div></div><div id="report-judgements"></div></article><aside class="report-side"><section class="panel"><p class="eyebrow">下周行动清单</p><ul class="check-list" id="report-actions"></ul></section><section class="panel"><p class="eyebrow">数据边界</p><p class="body-copy">仅保留公开页面的标题、日期、链接和必要短摘要；正式判断必须由人工复核。</p><a class="text-link" href="#sources" data-view="sources">查看信源与刷新方法 →</a></section></aside></div></section>
+        <section class="view" id="eval-view"><div class="page-title"><p class="eyebrow">模型评测台</p><h1>用业务场景比较质量、延迟和成本</h1><p class="lead">以下是可替换的本地演示记录，不代表模型官方成绩或真实生产结论。</p></div><div class="notice"><strong>演示数据</strong><span>替换 <code>data/eval-scenarios.json</code> 并接入 EvalScope 后，才可形成正式评测结论。</span></div><section class="panel table-panel"><div class="panel-heading"><div><p class="eyebrow">固定场景 · 企业知识库问答</p><h2>模型横向比较</h2></div><span class="tag neutral">可复现口径</span></div><div class="table-wrap"><table><thead><tr><th>模型</th><th>质量</th><th>引用准确率</th><th>延迟 p50</th><th>成本 / 题</th><th>建议</th></tr></thead><tbody id="eval-body"></tbody></table></div></section></section>
+        <section class="view" id="interview-view"><div class="page-title"><p class="eyebrow">访谈纪要</p><h1>把授权转写整理成可验证的观点</h1><p class="lead">本页为结构化模板，不包含或伪造真实专家访谈。</p></div><section class="panel interview-template"><div class="notice"><strong>模拟输入</strong><span>以下内容只演示字段结构；真实访谈须取得授权并保留原始转写。</span></div><div class="note-grid"><div><p class="eyebrow">背景</p><h2>企业 AI 采购决策：从能力比较到交付确定性</h2><p class="body-copy">访谈对象、时间与原文在正式使用时必须可追溯。</p></div><div><p class="eyebrow">关键观点</p><ul><li>把数据治理、权限审计与模型能力一起评估。</li><li>用可复现的业务评测替代一次性演示。</li></ul></div><div><p class="eyebrow">待验证问题</p><ul><li>长尾问题的人工兜底率是多少？</li><li>不同模型路由后的成本变化如何？</li></ul></div><div><p class="eyebrow">行动项</p><ul class="check-list"><li>补充 10 条已授权业务问题</li><li>记录异常样本与人工判断</li></ul></div></div></section></section>
+        <section class="view" id="sources-view"><div class="page-title"><p class="eyebrow">无密钥公开信源</p><h1>来源不是装饰，是研究证据。</h1><p class="lead">手动运行采集脚本后，条目先进入待复核收件箱，不会自动变成结论。</p></div><div class="notice"><strong>人工复核流程</strong><span>sources.json → inbox.json → 事实核对与补充结论 → signals.json</span></div><div id="source-catalog" class="source-grid"></div><section class="panel source-howto"><p class="eyebrow">手动刷新</p><code>python scripts/collect_public_sources.py</code><p class="body-copy">脚本只读取 RSS/Atom 公开元数据；网络或个别来源失败时会保留已有收件箱并生成报告。</p></section></section>
       </main>
     </div>
-
-    <div class="modal-backdrop" id="transcript-modal" aria-hidden="true">
-      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div class="modal-header"><div><div class="eyebrow">LOCAL DRAFT</div><h2 id="modal-title">导入访谈转写</h2></div><button class="icon-button modal-close" type="button" aria-label="关闭">×</button></div>
-        <p class="modal-help">粘贴已获授权的转写文本，先保存为本地草稿。Demo 不会自动上传内容。</p>
-        <textarea id="transcript-input" placeholder="在此粘贴转写文本…"></textarea>
-        <div class="modal-footer"><span>建议保留说话人和时间戳</span><button class="primary-button" id="apply-transcript" type="button">生成结构化草稿 <span>→</span></button></div>
-      </div>
-    </div>
-    <div class="toast" id="toast" role="status" aria-live="polite"><span class="toast-check">✓</span><span id="toast-message">已完成</span></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="app.js"></script>
   </body>
 </html>
