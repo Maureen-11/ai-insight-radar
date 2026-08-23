@@ -1,0 +1,37 @@
+{
+  "name": "AI Insight Radar Demo Evaluation Set",
+  "version": "0.1.0",
+  "notice": "本文件是面试展示用的最小评测配置。页面中的结果是演示记录，不代表模型官方成绩。替换 models 和 cases 后可接入 EvalScope。",
+  "scenarios": [
+    {
+      "id": "knowledge-qa",
+      "name": "企业知识库问答",
+      "metrics": ["answer_quality", "citation_accuracy", "latency_p50", "cost_per_question"],
+      "cases": [
+        {"id": "qa-001", "question": "根据员工报销制度，差旅住宿费的审批条件是什么？", "expected": "回答审批条件并明确引用制度章节"},
+        {"id": "qa-002", "question": "当知识库没有相关条款时，系统应该如何响应？", "expected": "明确拒答，不补造事实"},
+        {"id": "qa-003", "question": "请比较两个版本的采购流程差异，并列出变更日期。", "expected": "同时引用两个版本并标注时间"}
+      ]
+    },
+    {
+      "id": "long-document-summary",
+      "name": "长文档总结",
+      "metrics": ["summary_quality", "fact_coverage", "citation_accuracy", "latency_p50"],
+      "cases": [
+        {"id": "sum-001", "question": "从技术报告中提取问题、方法、结果和限制。", "expected": "四段结构化输出，不新增报告外事实"},
+        {"id": "sum-002", "question": "找出报告中所有带条件的结论。", "expected": "保留限定条件并关联原文位置"},
+        {"id": "sum-003", "question": "给管理层写一段 120 字以内的摘要。", "expected": "结论先行，保留关键风险"}
+      ]
+    },
+    {
+      "id": "structured-extraction",
+      "name": "结构化信息抽取",
+      "metrics": ["field_accuracy", "schema_validity", "latency_p50", "cost_per_question"],
+      "cases": [
+        {"id": "ext-001", "question": "从发布公告中抽取模型名、发布日期、上下文窗口和价格。", "expected": "严格输出 JSON，缺失字段为 null"},
+        {"id": "ext-002", "question": "识别公告涉及的厂商、产品、版本和能力标签。", "expected": "实体去重并保留来源链接"},
+        {"id": "ext-003", "question": "判断这条动态是否会影响企业采购决策。", "expected": "输出判断、依据与置信度"}
+      ]
+    }
+  ]
+}
