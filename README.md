@@ -80,7 +80,7 @@ python scripts/collect_public_sources.py
 
 ## 真实 DeepSeek 评测
 
-评测页不会再展示伪造的静态分数。它使用 30 道公开合成题，对 DeepSeek 的三组模型/思考配置比较质量、引用命中、JSON 合法率、延迟、token 与成本。
+评测页不会再展示伪造的静态分数。它使用 30 道公开合成题，对 DeepSeek 的三组模型/思考配置比较质量、引用命中、JSON 合法率、延迟、token 与成本。页面会明确说明：质量是关键词、引用编号和必填字段的规则加权信号；人工事实性、完整性与引用正确性复核完成前，不能把它当作生产结论。
 
 ```powershell
 $env:DEEPSEEK_API_KEY = "仅在你自己的终端粘贴 Key"
@@ -88,6 +88,8 @@ python scripts/run_deepseek_eval.py --live --budget-cny 20
 ```
 
 Key 只存在于当前终端会话，不会写入仓库。没有 `--live` 时脚本只运行零费用 mock 流程；mock 结果不会在页面中伪装为真实指标。`data/eval-review-template.json` 是真实运行后的人工抽样复核模板。
+
+真实运行前，脚本会打印按配置价格、输入 token 估算和输出上限计算的最坏情况费用预估；预估超过传入预算时会拒绝发起请求。
 
 运行离线测试：
 
@@ -138,7 +140,7 @@ After the GitHub Pages deployment completes, open [AI Insight Radar live demo](h
 
 ### Real DeepSeek evaluation
 
-The evaluation UI intentionally shows no synthetic scores. It displays results only after a real local run over 30 public synthetic cases and three DeepSeek configurations.
+The evaluation UI intentionally shows no synthetic scores. It displays results only after a real local run over 30 public synthetic cases and three DeepSeek configurations. The displayed “quality” figure is a deterministic signal based on expected keywords, citation IDs, and required fields; it is not a human quality score or an official benchmark.
 
 ```powershell
 $env:DEEPSEEK_API_KEY = "paste-your-key-in-your-own-terminal"
@@ -146,6 +148,8 @@ python scripts/run_deepseek_eval.py --live --budget-cny 20
 ```
 
 The key is read from the current terminal session only and is never written to this repository. Without `--live`, the script runs a zero-cost mock pipeline for testing; mock results are never presented as real results in the UI. `requirements-eval.txt` documents the optional EvalScope backend for additional benchmark and performance extensions.
+
+Before a live run, the script prints a conservative cost estimate based on the price snapshot and configured token ceilings. It refuses to send requests when that estimate exceeds the supplied budget.
 
 ### Public-source workflow
 

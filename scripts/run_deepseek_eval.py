@@ -14,6 +14,11 @@ def percentile(values, q):
 def cost_cny(usage, price, fx):
     hit=usage.get("prompt_cache_hit_tokens",0); prompt=usage.get("prompt_tokens",0); miss=usage.get("prompt_cache_miss_tokens", max(0,prompt-hit)); out=usage.get("completion_tokens",0)
     return ((hit*price["inputCacheHit"] + miss*price["inputCacheMiss"] + out*price["output"])/1_000_000)*fx
+def estimate_call_cost(config, item):
+    price=config["pricingSnapshot"][item["priceKey"]]; generation=config["generation"]
+    return cost_cny({"prompt_tokens":generation.get("maxInputTokensEstimate",1600),"completion_tokens":generation["maxTokens"]},price,config["usdToCny"])
+def estimate_run_cost(config, dataset):
+    return sum(estimate_call_cost(config, item)*len(cases(dataset)) for item in config["configurations"])
 def parse_json(text):
     try: return json.loads(text.strip())
     except (json.JSONDecodeError, TypeError): return None
@@ -37,7 +42,7 @@ def run(live, config, dataset, budget):
     for item in config["configurations"]:
         rows=[]; price=config["pricingSnapshot"][item["priceKey"]]
         for scenario, case in all_cases:
-            if spent >= budget: break
+            if spent + estimate_call_cost(config, item) > budget: break
             start=time.perf_counter()
             try:
                 if live:
@@ -52,10 +57,11 @@ def run(live, config, dataset, budget):
     return result, local, spent
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--live",action="store_true"); ap.add_argument("--budget-cny",type=float,default=20); ap.add_argument("--out",type=Path,default=DATA/"eval-results.json"); args=ap.parse_args()
-    config=load(DATA/"eval-config.json"); dataset=load(DATA/"eval-scenarios.json"); total=len(cases(dataset))*len(config["configurations"])
-    print(f"{total} calls planned; hard budget: CNY {args.budget_cny:.2f}. {'LIVE' if args.live else 'MOCK (no API calls)'}")
-    rows, raw, spent=run(args.live,config,dataset,min(args.budget_cny,config["budgetCny"]))
-    status="real" if args.live else "mock"; output={"schemaVersion":"0.3.0","status":status,"runAt":datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),"provider":config["provider"],"datasetVersion":dataset["version"],"budgetCny":min(args.budget_cny,config["budgetCny"]),"actualCostCny":round(spent,4),"pricingSnapshot":config["pricingSnapshot"],"configurations":rows,"humanReview":"pending"}
+    config=load(DATA/"eval-config.json"); dataset=load(DATA/"eval-scenarios.json"); total=len(cases(dataset))*len(config["configurations"]); budget=min(args.budget_cny,config["budgetCny"]); estimate=estimate_run_cost(config,dataset)
+    print(f"{total} calls planned; budget ceiling: CNY {budget:.2f}. Worst-case estimate: CNY {estimate:.4f}. {'LIVE' if args.live else 'MOCK (no API calls)'}")
+    if args.live and estimate > budget: raise RuntimeError("最坏情况费用预估超过预算；请降低题数、maxTokens 或提高已明确授权的预算。")
+    rows, raw, spent=run(args.live,config,dataset,budget)
+    status="real" if args.live else "mock"; output={"schemaVersion":"0.3.0","status":status,"runAt":datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),"provider":config["provider"],"datasetVersion":dataset["version"],"budgetCny":budget,"estimatedWorstCaseCny":round(estimate,4),"actualCostCny":round(spent,4),"pricingSnapshot":config["pricingSnapshot"],"configurations":rows,"humanReview":"pending"}
     args.out.parent.mkdir(parents=True, exist_ok=True); args.out.write_text(json.dumps(output,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     LOCAL.mkdir(parents=True,exist_ok=True); (LOCAL/"latest-responses.json").write_text(json.dumps(raw,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     if args.live:

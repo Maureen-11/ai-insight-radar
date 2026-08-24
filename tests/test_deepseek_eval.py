@@ -23,4 +23,10 @@ class DeepSeekEvalTests(unittest.TestCase):
         value=runner.cost_cny({"prompt_tokens":1000000,"completion_tokens":1000000},price,1)
         self.assertEqual(value,3)
 
+    def test_worst_case_estimate_is_positive_and_covers_all_configurations(self):
+        config = runner.load(ROOT / "data" / "eval-config.json")
+        dataset = runner.load(ROOT / "data" / "eval-scenarios.json")
+        self.assertGreater(runner.estimate_call_cost(config, config["configurations"][0]), 0)
+        self.assertGreater(runner.estimate_run_cost(config, dataset), 0)
+
 if __name__ == "__main__": unittest.main()

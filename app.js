@@ -10,6 +10,7 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
 const priorityLabel = { high: "高优先级", medium: "中优先级", low: "低优先级" };
+function displayRunTime(value) { const date = new Date(value); return Number.isNaN(date.valueOf()) ? "时间待补充" : date.toLocaleString("zh-CN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Shanghai" }); }
 
 function toast(message) { const el = $("#toast"); el.textContent = message; el.classList.add("is-visible"); window.setTimeout(() => el.classList.remove("is-visible"), 2600); }
 function localDate(value) { const date = new Date(`${value}T00:00:00`); return Number.isNaN(date.valueOf()) ? "日期待补充" : date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" }); }
@@ -42,12 +43,20 @@ function renderWeekly() {
 }
 function renderVendors() { $("#vendor-list").innerHTML = vendors.map((vendor) => `<article class="vendor"><div class="vendor-top"><strong>${vendor.name}</strong><span class="trend">${vendor.trend}</span></div><p>${vendor.verdict}</p><p class="action">建议：${vendor.action}</p></article>`).join(""); }
 function renderSources() { $("#source-catalog").innerHTML = state.sources.length ? state.sources.map((source) => `<article class="panel source-card"><p class="eyebrow">${escapeHtml(source.type)}</p><h2>${escapeHtml(source.name)}</h2><p>分类：${escapeHtml(source.category)} · 实体：${escapeHtml((source.entities || []).join(" / "))}</p><a class="text-link" href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">打开公开来源 ↗</a></article>`).join("") : '<div class="empty">未能读取 sources.json。</div>'; }
+function renderEvalFollowup(results) {
+  const target = $("#eval-followup");
+  if (!results || results.status !== "real") { target.innerHTML = ""; return; }
+  const rows = results.configurations || []; const bestQuality = [...rows].sort((a, b) => b.quality - a.quality)[0]; const bestValue = [...rows].sort((a, b) => a.costCny - b.costCny)[0]; const slowest = [...rows].sort((a, b) => b.latencyMs.p95 - a.latencyMs.p95)[0];
+  target.innerHTML = `<section class="panel eval-insight"><div class="panel-heading"><div><p class="eyebrow">本次运行的谨慎解读</p><h2>先做什么，再决定是否扩容</h2></div><span class="tag neutral">自动指标，待人工抽检</span></div><div class="insight-grid"><article><strong>质量信号最高</strong><p>${escapeHtml(bestQuality.label)} 在自动规则评分与引用命中上领先（${bestQuality.quality} / ${bestQuality.citationHitRate}%）；但这不等于人工事实性结论。</p></article><article><strong>成本最低</strong><p>${escapeHtml(bestValue.label)} 本次 30 题成本为 ¥${Number(bestValue.costCny).toFixed(4)}，可作为低成本基线配置。</p></article><article><strong>需要优先修复</strong><p>三组 JSON 合法率均偏低；先强化结构化输出约束与 schema 校验，再把结果用于业务流程。</p></article></div><div class="method-grid"><article><h3>指标口径</h3><p>“质量”是关键词命中、引用编号命中与必填字段的规则加权信号；不是人工主观评分，也不是官方榜单。</p></article><article><h3>实验边界</h3><p>30 道公开合成题、同一厂商 3 组配置。${escapeHtml(slowest.label)} 的 p95 为 ${slowest.latencyMs.p95} ms，不能据此推断其他场景或厂商。</p></article><article><h3>下一步</h3><p>按 <code>data/eval-review-template.json</code> 对每组 5 个样本人工评分；再补充结构化 JSON 指令后复跑同一题集。</p></article></div></section>`;
+}
 function renderEval() {
   const results = state.evalResults; const body = $("#eval-body");
-  if (!results || results.status !== "real") { body.innerHTML = '<tr><td colspan="7" class="empty">尚未运行真实评测。运行脚本前，页面不会展示任何模拟分数。</td></tr>'; return; }
-  $("#eval-notice").innerHTML = `<strong>真实运行 · ${escapeHtml(results.provider)}</strong><span>运行时间：${escapeHtml(results.runAt)} · 实际成本：¥${Number(results.actualCostCny || 0).toFixed(4)} · 人工复核：${escapeHtml(results.humanReview || "pending")}</span>`;
+  if (!results || results.status !== "real") { body.innerHTML = '<tr><td colspan="7" class="empty">尚未运行真实评测。运行脚本前，页面不会展示任何模拟分数。</td></tr>'; renderEvalFollowup(null); return; }
+  $("#eval-notice").innerHTML = `<strong>真实运行 · ${escapeHtml(results.provider)}</strong><span>运行时间：${escapeHtml(displayRunTime(results.runAt))}（北京时间） · 实际成本：¥${Number(results.actualCostCny || 0).toFixed(4)} · 人工复核：${escapeHtml(results.humanReview || "pending")}</span>`;
   $("#eval-run-meta").textContent = `真实运行 · ${results.configurations.reduce((n, item) => n + item.samples, 0)} 次调用 · 题集 ${results.datasetVersion}`;
+  $("#eval-review-state").textContent = results.humanReview === "complete" ? "人工复核已完成" : "人工复核待完成";
   body.innerHTML = results.configurations.map((row) => `<tr><td><strong>${escapeHtml(row.label)}</strong><br><small>${escapeHtml(row.model)} · ${escapeHtml(row.thinking)}</small></td><td>${row.quality}</td><td>${row.citationHitRate}%</td><td>${row.jsonValidRate}%</td><td>${row.latencyMs.p50} / ${row.latencyMs.p95} ms</td><td>¥${row.costCny}</td><td>${row.failureRate}%</td></tr>`).join("");
+  renderEvalFollowup(results);
 }
 function renderAll() { renderMetrics(); renderSignals(); renderWeekly(); renderVendors(); renderSources(); renderEval(); }
 
