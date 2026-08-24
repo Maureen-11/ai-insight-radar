@@ -78,6 +78,17 @@ python scripts/collect_public_sources.py
 - 为待复核条目填入规则模板式的结论、影响、行动草稿，但**不会自动发布判断**。
 - 即使网络超时、XML 异常或一个来源失败，也保留已有收件箱，并写入 `data/collection-report.json`。
 
+## 真实 DeepSeek 评测
+
+评测页不会再展示伪造的静态分数。它使用 30 道公开合成题，对 DeepSeek 的三组模型/思考配置比较质量、引用命中、JSON 合法率、延迟、token 与成本。
+
+```powershell
+$env:DEEPSEEK_API_KEY = "仅在你自己的终端粘贴 Key"
+python scripts/run_deepseek_eval.py --live --budget-cny 20
+```
+
+Key 只存在于当前终端会话，不会写入仓库。没有 `--live` 时脚本只运行零费用 mock 流程；mock 结果不会在页面中伪装为真实指标。`data/eval-review-template.json` 是真实运行后的人工抽样复核模板。
+
 运行离线测试：
 
 ```powershell
@@ -124,6 +135,17 @@ Open `http://127.0.0.1:4173/`. Use an HTTP server instead of opening the HTML fi
 ### Live demo
 
 After the GitHub Pages deployment completes, open [AI Insight Radar live demo](https://maureen-11.github.io/ai-insight-radar/). On a first deployment, wait until the `Deploy GitHub Pages` GitHub Actions workflow succeeds.
+
+### Real DeepSeek evaluation
+
+The evaluation UI intentionally shows no synthetic scores. It displays results only after a real local run over 30 public synthetic cases and three DeepSeek configurations.
+
+```powershell
+$env:DEEPSEEK_API_KEY = "paste-your-key-in-your-own-terminal"
+python scripts/run_deepseek_eval.py --live --budget-cny 20
+```
+
+The key is read from the current terminal session only and is never written to this repository. Without `--live`, the script runs a zero-cost mock pipeline for testing; mock results are never presented as real results in the UI. `requirements-eval.txt` documents the optional EvalScope backend for additional benchmark and performance extensions.
 
 ### Public-source workflow
 

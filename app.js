@@ -1,15 +1,10 @@
-const state = { signals: [], sources: [], filter: "全部", query: "", view: "radar" };
+const state = { signals: [], sources: [], evalResults: null, filter: "全部", query: "", view: "radar" };
 const labels = { radar: "情报雷达", report: "策略周报", eval: "模型评测", interview: "访谈纪要", sources: "公开信源" };
 const vendors = [
   { name: "OpenAI", trend: "观察维度上升", verdict: "模型能力、工具调用与价格变化要放在同一套采购表中。", action: "下次评测同时记录质量、延迟与成本。" },
   { name: "Anthropic", trend: "长文场景持续相关", verdict: "长上下文能力仍需用引用准确率和错误定位来验证。", action: "补充长文档引用题。" },
   { name: "Hugging Face", trend: "生态信号活跃", verdict: "开源模型与工具链是部署和评测方案的重要入口。", action: "关注版本变动并跑本地 fixture。" },
   { name: "ModelScope", trend: "评测工具可落地", verdict: "开源评测框架可以支撑可重复的业务场景比较。", action: "将场景题接入 EvalScope 验证。" }
-];
-const evalRows = [
-  ["模型 A（演示）", "91 / 100", "94%", "1.42s", "¥0.031", "优先验证"],
-  ["模型 B（演示）", "89 / 100", "90%", "1.68s", "¥0.047", "作为基准"],
-  ["模型 C（演示）", "84 / 100", "86%", "0.91s", "¥0.012", "成本优先"],
 ];
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -47,7 +42,13 @@ function renderWeekly() {
 }
 function renderVendors() { $("#vendor-list").innerHTML = vendors.map((vendor) => `<article class="vendor"><div class="vendor-top"><strong>${vendor.name}</strong><span class="trend">${vendor.trend}</span></div><p>${vendor.verdict}</p><p class="action">建议：${vendor.action}</p></article>`).join(""); }
 function renderSources() { $("#source-catalog").innerHTML = state.sources.length ? state.sources.map((source) => `<article class="panel source-card"><p class="eyebrow">${escapeHtml(source.type)}</p><h2>${escapeHtml(source.name)}</h2><p>分类：${escapeHtml(source.category)} · 实体：${escapeHtml((source.entities || []).join(" / "))}</p><a class="text-link" href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">打开公开来源 ↗</a></article>`).join("") : '<div class="empty">未能读取 sources.json。</div>'; }
-function renderEval() { $("#eval-body").innerHTML = evalRows.map((row) => `<tr>${row.map((cell, index) => `<td class="${index === 5 ? "recommendation" : ""}">${cell}</td>`).join("")}</tr>`).join(""); }
+function renderEval() {
+  const results = state.evalResults; const body = $("#eval-body");
+  if (!results || results.status !== "real") { body.innerHTML = '<tr><td colspan="7" class="empty">尚未运行真实评测。运行脚本前，页面不会展示任何模拟分数。</td></tr>'; return; }
+  $("#eval-notice").innerHTML = `<strong>真实运行 · ${escapeHtml(results.provider)}</strong><span>运行时间：${escapeHtml(results.runAt)} · 实际成本：¥${Number(results.actualCostCny || 0).toFixed(4)} · 人工复核：${escapeHtml(results.humanReview || "pending")}</span>`;
+  $("#eval-run-meta").textContent = `真实运行 · ${results.configurations.reduce((n, item) => n + item.samples, 0)} 次调用 · 题集 ${results.datasetVersion}`;
+  body.innerHTML = results.configurations.map((row) => `<tr><td><strong>${escapeHtml(row.label)}</strong><br><small>${escapeHtml(row.model)} · ${escapeHtml(row.thinking)}</small></td><td>${row.quality}</td><td>${row.citationHitRate}%</td><td>${row.jsonValidRate}%</td><td>${row.latencyMs.p50} / ${row.latencyMs.p95} ms</td><td>¥${row.costCny}</td><td>${row.failureRate}%</td></tr>`).join("");
+}
 function renderAll() { renderMetrics(); renderSignals(); renderWeekly(); renderVendors(); renderSources(); renderEval(); }
 
 function setView(view) {
@@ -67,9 +68,9 @@ window.addEventListener("hashchange", () => setView(location.hash.slice(1) || "r
 
 async function boot() {
   try {
-    const [signals, sources] = await Promise.all([fetch("data/signals.json"), fetch("data/sources.json")]);
-    if (!signals.ok || !sources.ok) throw new Error("数据文件无法读取");
-    state.signals = await signals.json(); state.sources = await sources.json();
+    const [signals, sources, evalResults] = await Promise.all([fetch("data/signals.json"), fetch("data/sources.json"), fetch("data/eval-results.json")]);
+    if (!signals.ok || !sources.ok || !evalResults.ok) throw new Error("数据文件无法读取");
+    state.signals = await signals.json(); state.sources = await sources.json(); state.evalResults = await evalResults.json();
     if (!Array.isArray(state.signals) || !Array.isArray(state.sources)) throw new Error("数据格式错误");
     renderAll(); setView(location.hash.slice(1) || "radar");
   } catch (error) {

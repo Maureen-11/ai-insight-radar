@@ -7,3 +7,5 @@ dist/
 build/
 __pycache__/
 *.py[cod]
+.env
+work/eval-runs/

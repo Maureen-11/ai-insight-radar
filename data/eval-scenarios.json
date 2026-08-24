@@ -1,37 +1,14 @@
 {
-  "name": "AI Insight Radar Demo Evaluation Set",
-  "version": "0.1.0",
-  "notice": "本文件是面试展示用的最小评测配置。页面中的结果是演示记录，不代表模型官方成绩。替换 models 和 cases 后可接入 EvalScope。",
-  "scenarios": [
-    {
-      "id": "knowledge-qa",
-      "name": "企业知识库问答",
-      "metrics": ["answer_quality", "citation_accuracy", "latency_p50", "cost_per_question"],
-      "cases": [
-        {"id": "qa-001", "question": "根据员工报销制度，差旅住宿费的审批条件是什么？", "expected": "回答审批条件并明确引用制度章节"},
-        {"id": "qa-002", "question": "当知识库没有相关条款时，系统应该如何响应？", "expected": "明确拒答，不补造事实"},
-        {"id": "qa-003", "question": "请比较两个版本的采购流程差异，并列出变更日期。", "expected": "同时引用两个版本并标注时间"}
-      ]
-    },
-    {
-      "id": "long-document-summary",
-      "name": "长文档总结",
-      "metrics": ["summary_quality", "fact_coverage", "citation_accuracy", "latency_p50"],
-      "cases": [
-        {"id": "sum-001", "question": "从技术报告中提取问题、方法、结果和限制。", "expected": "四段结构化输出，不新增报告外事实"},
-        {"id": "sum-002", "question": "找出报告中所有带条件的结论。", "expected": "保留限定条件并关联原文位置"},
-        {"id": "sum-003", "question": "给管理层写一段 120 字以内的摘要。", "expected": "结论先行，保留关键风险"}
-      ]
-    },
-    {
-      "id": "structured-extraction",
-      "name": "结构化信息抽取",
-      "metrics": ["field_accuracy", "schema_validity", "latency_p50", "cost_per_question"],
-      "cases": [
-        {"id": "ext-001", "question": "从发布公告中抽取模型名、发布日期、上下文窗口和价格。", "expected": "严格输出 JSON，缺失字段为 null"},
-        {"id": "ext-002", "question": "识别公告涉及的厂商、产品、版本和能力标签。", "expected": "实体去重并保留来源链接"},
-        {"id": "ext-003", "question": "判断这条动态是否会影响企业采购决策。", "expected": "输出判断、依据与置信度"}
-      ]
-    }
+  "name":"AI Insight Radar Public Synthetic Evaluation Set","version":"0.3.0","notice":"所有题目、参考材料与实体均为公开可复现的合成示例；不含任何个人、客户或公司私密数据。回答只能引用给定 [DOC-*]。",
+  "scenarios":[
+    {"id":"knowledge-qa","name":"企业知识库问答","metrics":["quality","citation_hit_rate","latency_p50","cost_per_question"],"cases":[
+      {"id":"qa-01","prompt":"住宿报销上限是多少？","context":[{"id":"DOC-Q1","text":"差旅制度：一线城市住宿上限为每晚 800 元。"}],"keywords":["800"],"citations":["DOC-Q1"]},{"id":"qa-02","prompt":"机票改签需要什么条件？","context":[{"id":"DOC-Q2","text":"机票改签应在出发前完成，并由直属主管审批。"}],"keywords":["出发前","直属主管"],"citations":["DOC-Q2"]},{"id":"qa-03","prompt":"没有制度依据时怎样回答？","context":[{"id":"DOC-Q3","text":"知识库缺少依据时，系统必须明确说明无法确认，不得编造。"}],"keywords":["无法确认","不得编造"],"citations":["DOC-Q3"]},{"id":"qa-04","prompt":"采购申请由谁审批？","context":[{"id":"DOC-Q4","text":"低于 5 万元由部门负责人审批，5 万元及以上还需财务复核。"}],"keywords":["部门负责人","财务"],"citations":["DOC-Q4"]},{"id":"qa-05","prompt":"数据导出有哪些限制？","context":[{"id":"DOC-Q5","text":"个人信息导出需脱敏，并记录用途与审批人。"}],"keywords":["脱敏","审批"],"citations":["DOC-Q5"]},{"id":"qa-06","prompt":"远程办公规则是什么？","context":[{"id":"DOC-Q6","text":"员工每月可申请两天远程办公，需提前一个工作日登记。"}],"keywords":["两天","一个工作日"],"citations":["DOC-Q6"]},{"id":"qa-07","prompt":"安全事件多久上报？","context":[{"id":"DOC-Q7","text":"发现疑似安全事件后，应在 30 分钟内报告。"}],"keywords":["30 分钟"],"citations":["DOC-Q7"]},{"id":"qa-08","prompt":"合同归档需要什么？","context":[{"id":"DOC-Q8","text":"合同归档应包含签署版本、审批记录和供应商资质。"}],"keywords":["签署版本","审批记录"],"citations":["DOC-Q8"]},{"id":"qa-09","prompt":"谁能访问看板？","context":[{"id":"DOC-Q9","text":"看板仅向业务负责人和授权数据分析师开放。"}],"keywords":["业务负责人","数据分析师"],"citations":["DOC-Q9"]},{"id":"qa-10","prompt":"上线前最少要完成什么？","context":[{"id":"DOC-Q10","text":"上线前必须完成场景评测、风险评审和回滚演练。"}],"keywords":["场景评测","风险评审","回滚"],"citations":["DOC-Q10"]}
+    ]},
+    {"id":"long-document-summary","name":"长文档总结","metrics":["quality","citation_hit_rate","latency_p50","cost_per_question"],"cases":[
+      {"id":"sum-01","prompt":"用两句话总结结论和风险。","context":[{"id":"DOC-S1","text":"试点使处理时长下降 20%，但只覆盖标准请求；长尾请求仍需人工审核。"}],"keywords":["20%","人工审核"],"citations":["DOC-S1"]},{"id":"sum-02","prompt":"提炼方法、结果和限制。","context":[{"id":"DOC-S2","text":"团队用 50 条题目测试三个模型。最高质量配置延迟更高，样本量不足以解释长尾表现。"}],"keywords":["50","延迟","样本量"],"citations":["DOC-S2"]},{"id":"sum-03","prompt":"写管理层摘要。","context":[{"id":"DOC-S3","text":"预算执行率为 74%，差异来自付款延期；下月复核未结算合同。"}],"keywords":["74%","付款延期","合同"],"citations":["DOC-S3"]},{"id":"sum-04","prompt":"找出带条件的结论。","context":[{"id":"DOC-S4","text":"检索命中率高于 85% 时可自动答复；低于阈值必须转人工。"}],"keywords":["85%","转人工"],"citations":["DOC-S4"]},{"id":"sum-05","prompt":"总结发布和回滚条件。","context":[{"id":"DOC-S5","text":"第一周仅开放给 10% 用户。错误率连续两小时超过 3% 时立即回滚。"}],"keywords":["10%","3%","回滚"],"citations":["DOC-S5"]},{"id":"sum-06","prompt":"概括反馈和后续动作。","context":[{"id":"DOC-S6","text":"用户认可速度，但要求答案提供来源；下个迭代增加引用卡片。"}],"keywords":["来源","引用卡片"],"citations":["DOC-S6"]},{"id":"sum-07","prompt":"总结数据治理要求。","context":[{"id":"DOC-S7","text":"训练数据需标记来源与保留期限；敏感字段进入索引前必须脱敏。"}],"keywords":["来源","保留期限","脱敏"],"citations":["DOC-S7"]},{"id":"sum-08","prompt":"说明性能变化及原因。","context":[{"id":"DOC-S8","text":"P95 延迟从 2.1 秒升至 3.4 秒，原因是新增跨文档引用校验。"}],"keywords":["2.1","3.4","引用校验"],"citations":["DOC-S8"]},{"id":"sum-09","prompt":"总结实验结论。","context":[{"id":"DOC-S9","text":"思考模式在复杂抽取题更完整，但平均成本增加；简单问答无显著收益。"}],"keywords":["复杂抽取","成本","简单问答"],"citations":["DOC-S9"]},{"id":"sum-10","prompt":"提炼下周行动。","context":[{"id":"DOC-S10","text":"下周补充 10 条长尾题、复核失败样本，并确定模型路由阈值。"}],"keywords":["10","失败样本","路由阈值"],"citations":["DOC-S10"]}
+    ]},
+    {"id":"structured-extraction","name":"结构化信息抽取","metrics":["quality","json_valid_rate","citation_hit_rate","latency_p50","cost_per_question"],"cases":[
+      {"id":"ext-01","prompt":"严格输出 JSON，字段为 model,date,context。","context":[{"id":"DOC-E1","text":"公告：Atlas-1 于 2026-08-01 发布，支持 128K 上下文。"}],"keywords":["Atlas-1","2026-08-01","128K"],"citations":["DOC-E1"],"required_fields":["model","date","context"]},{"id":"ext-02","prompt":"严格输出 JSON，字段为 vendor,product,price。","context":[{"id":"DOC-E2","text":"Nova 发布 Insight API，标准输入价格为每百万 token 0.20 美元。"}],"keywords":["Nova","Insight API","0.20"],"citations":["DOC-E2"],"required_fields":["vendor","product","price"]},{"id":"ext-03","prompt":"严格输出 JSON，字段为 event,owner,deadline。","context":[{"id":"DOC-E3","text":"评测报告由研究组负责，需在 2026-09-10 前完成复核。"}],"keywords":["评测报告","研究组","2026-09-10"],"citations":["DOC-E3"],"required_fields":["event","owner","deadline"]},{"id":"ext-04","prompt":"严格输出 JSON，字段为 feature,status,risk。","context":[{"id":"DOC-E4","text":"引用追溯功能处于灰度阶段，风险是旧文档缺少稳定锚点。"}],"keywords":["引用追溯","灰度","稳定锚点"],"citations":["DOC-E4"],"required_fields":["feature","status","risk"]},{"id":"ext-05","prompt":"严格输出 JSON，字段为 metric,before,after。","context":[{"id":"DOC-E5","text":"引用准确率从 78% 提升到 86%。"}],"keywords":["引用准确率","78","86"],"citations":["DOC-E5"],"required_fields":["metric","before","after"]},{"id":"ext-06","prompt":"严格输出 JSON，字段为 supplier,contract,action。","context":[{"id":"DOC-E6","text":"供应商 Orion 合同于 2026-10-01 到期，采购需发起续约评估。"}],"keywords":["Orion","2026-10-01","续约"],"citations":["DOC-E6"],"required_fields":["supplier","contract","action"]},{"id":"ext-07","prompt":"严格输出 JSON，字段为 dataset,records,restriction。","context":[{"id":"DOC-E7","text":"RadarQA 含 300 条记录，禁止包含个人身份信息。"}],"keywords":["RadarQA","300","个人"],"citations":["DOC-E7"],"required_fields":["dataset","records","restriction"]},{"id":"ext-08","prompt":"严格输出 JSON，字段为 incident,severity,response。","context":[{"id":"DOC-E8","text":"引用缺失定为中等严重度，应在一个工作日内完成根因分析。"}],"keywords":["引用缺失","中等","一个工作日"],"citations":["DOC-E8"],"required_fields":["incident","severity","response"]},{"id":"ext-09","prompt":"严格输出 JSON，字段为 region,limit,approver。","context":[{"id":"DOC-E9","text":"华东试点限额 50 名用户，业务总监为最终批准人。"}],"keywords":["华东","50","业务总监"],"citations":["DOC-E9"],"required_fields":["region","limit","approver"]},{"id":"ext-10","prompt":"严格输出 JSON，字段为 model,mode,recommendation。","context":[{"id":"DOC-E10","text":"Flash 非思考模式适合简单检索，复杂抽取建议开启思考模式。"}],"keywords":["Flash","非思考","复杂抽取"],"citations":["DOC-E10"],"required_fields":["model","mode","recommendation"]}
+    ]}
   ]
 }

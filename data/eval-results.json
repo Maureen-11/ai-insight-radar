@@ -1,0 +1,1 @@
+{"schemaVersion":"0.3.0","status":"not_run","note":"尚未运行真实 API 评测。请使用 scripts/run_deepseek_eval.py --live，并只通过本机 DEEPSEEK_API_KEY 环境变量提供凭据。","configurations":[]}
