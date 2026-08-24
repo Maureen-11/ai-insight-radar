@@ -24,13 +24,14 @@ python -m http.server 4173
 
 GitHub Pages 部署完成后，可直接访问：[AI Insight Radar 在线预览](https://maureen-11.github.io/ai-insight-radar/)。若首次部署尚未完成，请等待 GitHub Actions 的 `Deploy GitHub Pages` 工作流显示成功。
 
-## v0.2 的研究界面
+## v0.4.0：研究工作台与模型能力地图
 
 - 情报列表默认展示：**结论、影响、建议行动**；来源是证据入口，不是装饰标签。
 - `signal.html?id=signal-001` 提供独立详情：为什么重要、证据、待验证问题、人工复核、置信度和前后导航。
 - 周报从 `data/signals.json` 中的已复核条目生成，每项都指向来源与日期。
 - 重点厂商强调最新判断与建议动作，不使用没有解释力的装饰性分数。
-- 模型评测页中的结果明确标为**本地演示记录**，不是官方成绩或真实生产结论。
+- 模型能力地图可按**国内 / 海外**与**本地实测 / 官方资料**筛选；两类证据不混入同一排行榜。
+- 模型评测页只展示本项目真实运行获得的 DeepSeek 本地记录；公开资料不填充效果、延迟或成本分数。
 - 访谈页明确标为**模拟输入模板**；真实转写必须获得授权。
 
 ## 数据与人工复核流程
@@ -100,6 +101,8 @@ Key 只存在于当前终端会话，不会写入仓库。没有 `--live` 时脚
 
 档案在 `data/models.json`，证据在 `data/model-evidence.json`，人工抽检模板在 `data/model-review.json`。场景对比页将明确展示题集覆盖范围，不把总分伪装成单场景分数。
 
+当前人工抽检队列仍标为**待复核**：在完成事实性、完整性、引用正确性与结构化可用性检查前，页面不会把规则指标写成最终的人类体验结论。
+
 EvalScope 是可选的 Apache-2.0 标准评测/性能后端；Promptfoo 是后续 Agent/RAG 回归评测候选（MIT）。二者均未复制源码或 UI 到本仓库，也不会在默认流程中运行或发送数据。
 
 运行离线测试：
@@ -134,6 +137,7 @@ Start here:
 2. **Signal detail** — open `signal.html?id=signal-001` to see why it matters now, evidence, open questions, confidence, priority, and review status.
 3. **Weekly report** — generated from reviewed signals; every judgement links back to a dated public source.
 4. **Model evaluation** — a clearly labelled local demo of comparing quality, latency, and cost on the same scenario. It is not an official benchmark result.
+5. **Capability map** — filter domestic/overseas profiles and keep locally measured evidence separate from linked official information.
 
 ### Quick start
 
@@ -167,6 +171,8 @@ Before a live run, the script prints a conservative cost estimate based on the p
 The capability map keeps two evidence layers separate: **local measurements** show only results truly run by this project, while **official information** is a linked capability profile for models not yet evaluated on the same task set. Public material never receives invented quality, latency, or cost scores.
 
 `data/models.json`, `data/model-evidence.json`, and `data/model-review.json` contain the model profiles, evidence records, and human-review queue. EvalScope (Apache-2.0) is the optional standard evaluation/performance backend; Promptfoo (MIT) is reserved for a future Agent/RAG regression layer. Neither project source nor UI is copied into this repository.
+
+The current human review queue is explicitly marked **pending**. Until factuality, completeness, citation correctness, and structured-output usability have been sampled by a reviewer, rule-based metrics are not presented as final human experience conclusions.
 
 ### Public-source workflow
 
