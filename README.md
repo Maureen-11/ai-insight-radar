@@ -91,6 +91,17 @@ Key 只存在于当前终端会话，不会写入仓库。没有 `--live` 时脚
 
 真实运行前，脚本会打印按配置价格、输入 token 估算和输出上限计算的最坏情况费用预估；预估超过传入预算时会拒绝发起请求。
 
+## v0.4 模型能力地图
+
+`模型能力地图`把模型信息拆成两类不可混排的证据：
+
+- **本地实测**：本项目已运行的 DeepSeek 配置，才展示质量信号、引用命中、JSON 合法率、P50/P95、成本和失败率。
+- **官方资料**：国内外厂商的可点击官方说明，只用于能力定位与后续候选池；未在本项目同题集复测时不显示效果分数。
+
+档案在 `data/models.json`，证据在 `data/model-evidence.json`，人工抽检模板在 `data/model-review.json`。场景对比页将明确展示题集覆盖范围，不把总分伪装成单场景分数。
+
+EvalScope 是可选的 Apache-2.0 标准评测/性能后端；Promptfoo 是后续 Agent/RAG 回归评测候选（MIT）。二者均未复制源码或 UI 到本仓库，也不会在默认流程中运行或发送数据。
+
 运行离线测试：
 
 ```powershell
@@ -150,6 +161,12 @@ python scripts/run_deepseek_eval.py --live --budget-cny 20
 The key is read from the current terminal session only and is never written to this repository. Without `--live`, the script runs a zero-cost mock pipeline for testing; mock results are never presented as real results in the UI. `requirements-eval.txt` documents the optional EvalScope backend for additional benchmark and performance extensions.
 
 Before a live run, the script prints a conservative cost estimate based on the price snapshot and configured token ceilings. It refuses to send requests when that estimate exceeds the supplied budget.
+
+### Model capability map
+
+The capability map keeps two evidence layers separate: **local measurements** show only results truly run by this project, while **official information** is a linked capability profile for models not yet evaluated on the same task set. Public material never receives invented quality, latency, or cost scores.
+
+`data/models.json`, `data/model-evidence.json`, and `data/model-review.json` contain the model profiles, evidence records, and human-review queue. EvalScope (Apache-2.0) is the optional standard evaluation/performance backend; Promptfoo (MIT) is reserved for a future Agent/RAG regression layer. Neither project source nor UI is copied into this repository.
 
 ### Public-source workflow
 

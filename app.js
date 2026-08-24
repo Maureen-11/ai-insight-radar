@@ -1,91 +1,38 @@
-const state = { signals: [], sources: [], evalResults: null, filter: "全部", query: "", view: "radar" };
-const labels = { radar: "情报雷达", report: "策略周报", eval: "模型评测", interview: "访谈纪要", sources: "公开信源" };
-const vendors = [
-  { name: "OpenAI", trend: "观察维度上升", verdict: "模型能力、工具调用与价格变化要放在同一套采购表中。", action: "下次评测同时记录质量、延迟与成本。" },
-  { name: "Anthropic", trend: "长文场景持续相关", verdict: "长上下文能力仍需用引用准确率和错误定位来验证。", action: "补充长文档引用题。" },
-  { name: "Hugging Face", trend: "生态信号活跃", verdict: "开源模型与工具链是部署和评测方案的重要入口。", action: "关注版本变动并跑本地 fixture。" },
-  { name: "ModelScope", trend: "评测工具可落地", verdict: "开源评测框架可以支撑可重复的业务场景比较。", action: "将场景题接入 EvalScope 验证。" }
-];
-const $ = (selector, root = document) => root.querySelector(selector);
-const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
-const priorityLabel = { high: "高优先级", medium: "中优先级", low: "低优先级" };
-function displayRunTime(value) { const date = new Date(value); return Number.isNaN(date.valueOf()) ? "时间待补充" : date.toLocaleString("zh-CN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Shanghai" }); }
+const state={signals:[],sources:[],evalResults:null,models:[],modelEvidence:[],modelReview:null,filter:"全部",query:"",view:"radar",modelRegion:"全部",evidenceFilter:"全部"};
+const labels={radar:"情报雷达",report:"策略周报",map:"模型能力地图",eval:"模型评测",interview:"访谈纪要",sources:"公开信源"};
+const vendors=[{name:"OpenAI",trend:"观察维度上升",verdict:"模型能力、工具调用与价格变化要放在同一套采购表中。",action:"下次评测同时记录质量、延迟与成本。"},{name:"Anthropic",trend:"长文场景持续相关",verdict:"长上下文能力仍需用引用准确率和错误定位来验证。",action:"补充长文档引用题。"},{name:"Hugging Face",trend:"生态信号活跃",verdict:"开源模型与工具链是部署和评测方案的重要入口。",action:"关注版本变动并跑本地 fixture。"},{name:"ModelScope",trend:"评测工具可落地",verdict:"开源评测框架可以支撑可重复的业务场景比较。",action:"将场景题接入 EvalScope 验证。"}];
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const escapeHtml=(v="")=>String(v).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+const priorityLabel={high:"高优先级",medium:"中优先级",low:"低优先级"},evidenceLabel={local:"本地实测",official:"官方资料",benchmark:"公开基准"};
+function displayRunTime(v){const d=new Date(v);return Number.isNaN(d.valueOf())?"时间待补充":d.toLocaleString("zh-CN",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Shanghai"})}
+function localDate(v){const d=new Date(v);return Number.isNaN(d.valueOf())?"日期待补充":d.toLocaleDateString("zh-CN",{month:"short",day:"numeric"})}
+function toast(m){const e=$("#toast");e.textContent=m;e.classList.add("is-visible");window.setTimeout(()=>e.classList.remove("is-visible"),2600)}
+function reviewedSignals(){return state.signals.filter(i=>i.reviewed)}
+function matches(s){const h=[s.title,s.conclusion,s.category,...(s.entities||[]),s.source?.name].join(" ").toLowerCase();return(state.filter==="全部"||s.category===state.filter)&&(!state.query||h.includes(state.query.toLowerCase()))}
+function localEvidence(){return state.modelEvidence.filter(i=>i.type==="local")}
+function evidenceFor(id){return state.modelEvidence.filter(i=>i.modelId===id)}
+function evidenceDisplayLabel(i){const p=state.models.find(m=>m.id===i.modelId);return p?`${p.model} · ${i.label}`:i.label}
+function configLabel(id){const i=localEvidence().find(x=>x.configurationId===id);return i?evidenceDisplayLabel(i):id}
 
-function toast(message) { const el = $("#toast"); el.textContent = message; el.classList.add("is-visible"); window.setTimeout(() => el.classList.remove("is-visible"), 2600); }
-function localDate(value) { const date = new Date(`${value}T00:00:00`); return Number.isNaN(date.valueOf()) ? "日期待补充" : date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" }); }
-function reviewedSignals() { return state.signals.filter((item) => item.reviewed); }
-function matches(signal) { const haystack = [signal.title, signal.conclusion, signal.category, ...(signal.entities || []), signal.source?.name].join(" ").toLowerCase(); return (state.filter === "全部" || signal.category === state.filter) && (!state.query || haystack.includes(state.query.toLowerCase())); }
+function renderMetrics(){const r=reviewedSignals(),h=r.filter(i=>i.priority==="high").length;$("#metrics").innerHTML=[[r.length,"已复核情报"],[h,"高优先级判断"],[state.sources.length,"已配置公开信源"],[localEvidence().length,"本地实测配置"]].map(([v,l])=>`<article class="metric"><strong>${v}</strong><span>${l}</span></article>`).join("");$("#pipeline-status").textContent=`${r.length} 条已复核 · ${state.models.length} 个模型档案`}
+function renderSignals(){const l=$("#signal-list"),r=reviewedSignals().filter(matches);$("#signal-count").textContent=`${r.length} 条可读`;l.innerHTML=r.length?r.map(i=>`<article class="signal"><div class="signal-top"><span class="tag ${i.priority}">${priorityLabel[i.priority]||"待定"}</span><span>${escapeHtml(i.category)}</span><span>·</span><span>${localDate(i.source?.publishedAt)}</span><span>·</span><span>${escapeHtml((i.entities||[]).join(" / "))}</span></div><h3><a href="signal.html?id=${encodeURIComponent(i.id)}">${escapeHtml(i.title)}</a></h3><p class="signal-conclusion">结论：${escapeHtml(i.conclusion)}</p><div class="signal-detail-row"><strong>影响</strong><span>${escapeHtml((i.impact||[]).join("；"))}</span></div><div class="signal-detail-row"><strong>建议行动</strong><span>${escapeHtml((i.action||[]).join("；"))}</span></div><div class="signal-footer"><a class="source-link" href="${escapeHtml(i.source?.url)}" target="_blank" rel="noreferrer">来源：${escapeHtml(i.source?.name||"来源待补充")} ↗</a><span>置信度 ${Math.round((i.confidence||0)*100)}%</span><span>状态：${escapeHtml(i.status||"待复核")}</span><a class="text-link" href="signal.html?id=${encodeURIComponent(i.id)}">完整研判 →</a></div></article>`).join(""):'<div class="empty">没有匹配的已复核情报。请更换分类或搜索词。</div>'}
+function renderWeekly(){const t=reviewedSignals().sort((a,b)=>(b.priority==="high")-(a.priority==="high")||b.confidence-a.confidence).slice(0,3);$("#weekly-preview").innerHTML=t.map(i=>`<article><strong>${escapeHtml(i.conclusion)}</strong><span>${escapeHtml(i.source.name)} · ${localDate(i.source.publishedAt)}</span></article>`).join("");$("#report-judgements").innerHTML=t.map(i=>`<section class="judgement"><h3>${escapeHtml(i.conclusion)}</h3><p><strong>为什么现在：</strong>${escapeHtml(i.whyNow)}</p><p><strong>影响：</strong>${escapeHtml((i.impact||[]).join("；"))}</p><div class="evidence">证据：<a href="${escapeHtml(i.source.url)}" target="_blank" rel="noreferrer">${escapeHtml(i.source.name)} · ${localDate(i.source.publishedAt)} ↗</a> · 人工复核：${i.reviewed?"是":"否"}</div></section>`).join("");const a=[...new Set(t.flatMap(i=>i.action||[]))].slice(0,5);$("#report-actions").innerHTML=a.map(i=>`<li>${escapeHtml(i)}</li>`).join("")||"<li>暂无行动项</li>";const b=[...localEvidence()].sort((x,y)=>y.metrics.quality-x.metrics.quality)[0];$("#model-observation").innerHTML=b?`<strong>${escapeHtml(b.label)}</strong><p>本次同题集的自动质量信号为 ${b.metrics.quality}，引用命中 ${b.metrics.citationHitRate}%。结构化输出仍需优先优化并完成人工抽检。</p>`:'<p class="body-copy">尚无本地实测记录。</p>'}
+function renderVendors(){$("#vendor-list").innerHTML=vendors.map(v=>`<article class="vendor"><div class="vendor-top"><strong>${v.name}</strong><span class="trend">${v.trend}</span></div><p>${v.verdict}</p><p class="action">建议：${v.action}</p></article>`).join("")}
+function renderSources(){$("#source-catalog").innerHTML=state.sources.length?state.sources.map(s=>`<article class="panel source-card"><p class="eyebrow">${escapeHtml(s.type)}</p><h2>${escapeHtml(s.name)}</h2><p>分类：${escapeHtml(s.category)} · 实体：${escapeHtml((s.entities||[]).join(" / "))}</p><a class="text-link" href="${escapeHtml(s.url)}" target="_blank" rel="noreferrer">打开公开来源 ↗</a></article>`).join(""):'<div class="empty">未能读取 sources.json。</div>'}
+function renderEvalFollowup(r){const t=$("#eval-followup");if(!r||r.status!=="real"){t.innerHTML="";return}const x=r.configurations||[],q=[...x].sort((a,b)=>b.quality-a.quality)[0],v=[...x].sort((a,b)=>a.costCny-b.costCny)[0],s=[...x].sort((a,b)=>b.latencyMs.p95-a.latencyMs.p95)[0];t.innerHTML=`<section class="panel eval-insight"><div class="panel-heading"><div><p class="eyebrow">本次运行的谨慎解读</p><h2>先做什么，再决定是否扩容</h2></div><span class="tag neutral">自动指标，待人工抽检</span></div><div class="insight-grid"><article><strong>质量信号最高</strong><p>${escapeHtml(q.label)} 在自动规则评分与引用命中上领先（${q.quality} / ${q.citationHitRate}%）；但这不等于人工事实性结论。</p></article><article><strong>成本最低</strong><p>${escapeHtml(v.label)} 本次 30 题成本为 ¥${Number(v.costCny).toFixed(4)}，可作为低成本基线配置。</p></article><article><strong>需要优先修复</strong><p>三组 JSON 合法率均偏低；先强化结构化输出约束与 schema 校验，再把结果用于业务流程。</p></article></div><div class="method-grid"><article><h3>指标口径</h3><p>“质量”是关键词命中、引用编号命中与必填字段的规则加权信号；不是人工主观评分，也不是官方榜单。</p></article><article><h3>实验边界</h3><p>30 道公开合成题、同一厂商 3 组配置。${escapeHtml(s.label)} 的 p95 为 ${s.latencyMs.p95} ms，不能据此推断其他场景或厂商。</p></article><article><h3>下一步</h3><p>按 <code>data/model-review.json</code> 对抽样记录人工评分；再补充结构化 JSON 指令后复跑同一题集。</p></article></div></section>`}
+function renderEval(){const r=state.evalResults,b=$("#eval-body");if(!r||r.status!=="real"){b.innerHTML='<tr><td colspan="7" class="empty">尚未运行真实评测。运行脚本前，页面不会展示任何模拟分数。</td></tr>';renderEvalFollowup(null);return}$("#eval-notice").innerHTML=`<strong>真实运行 · ${escapeHtml(r.provider)}</strong><span>运行时间：${escapeHtml(displayRunTime(r.runAt))}（北京时间） · 实际成本：¥${Number(r.actualCostCny||0).toFixed(4)} · 人工复核：${escapeHtml(r.humanReview||"pending")}</span>`;$("#eval-run-meta").textContent=`真实运行 · ${r.configurations.reduce((n,i)=>n+i.samples,0)} 次调用 · 题集 ${r.datasetVersion}`;$("#eval-review-state").textContent=r.humanReview==="complete"?"人工复核已完成":"人工复核待完成";b.innerHTML=r.configurations.map(i=>`<tr><td><strong>${escapeHtml(i.label)}</strong><br><small>${escapeHtml(i.model)} · ${escapeHtml(i.thinking)}</small></td><td>${i.quality}</td><td>${i.citationHitRate}%</td><td>${i.jsonValidRate}%</td><td>${i.latencyMs.p50} / ${i.latencyMs.p95} ms</td><td>¥${i.costCny}</td><td>${i.failureRate}%</td></tr>`).join("");renderEvalFollowup(r)}
 
-function renderMetrics() {
-  const reviewed = reviewedSignals(); const high = reviewed.filter((item) => item.priority === "high").length;
-  $("#metrics").innerHTML = [[reviewed.length, "已复核情报"], [high, "高优先级判断"], [state.sources.length, "已配置公开信源"], [reviewed.filter((item) => item.status === "待验证").length, "需要验证的问题"]].map(([value, label]) => `<article class="metric"><strong>${value}</strong><span>${label}</span></article>`).join("");
-  $("#pipeline-status").textContent = `${reviewed.length} 条已复核 · ${state.sources.length} 个公开源`;
-}
-function renderSignals() {
-  const list = $("#signal-list"); const result = reviewedSignals().filter(matches);
-  $("#signal-count").textContent = `${result.length} 条可读`;
-  list.innerHTML = result.length ? result.map((item) => `<article class="signal">
-    <div class="signal-top"><span class="tag ${item.priority}">${priorityLabel[item.priority] || "待定"}</span><span>${escapeHtml(item.category)}</span><span>·</span><span>${localDate(item.source?.publishedAt)}</span><span>·</span><span>${escapeHtml((item.entities || []).join(" / "))}</span></div>
-    <h3><a href="signal.html?id=${encodeURIComponent(item.id)}">${escapeHtml(item.title)}</a></h3>
-    <p class="signal-conclusion">结论：${escapeHtml(item.conclusion)}</p>
-    <div class="signal-detail-row"><strong>影响</strong><span>${escapeHtml((item.impact || []).join("；"))}</span></div>
-    <div class="signal-detail-row"><strong>建议行动</strong><span>${escapeHtml((item.action || []).join("；"))}</span></div>
-    <div class="signal-footer"><a class="source-link" href="${escapeHtml(item.source?.url)}" target="_blank" rel="noreferrer">来源：${escapeHtml(item.source?.name || "来源待补充")} ↗</a><span>置信度 ${Math.round((item.confidence || 0) * 100)}%</span><span>状态：${escapeHtml(item.status || "待复核")}</span><a class="text-link" href="signal.html?id=${encodeURIComponent(item.id)}">完整研判 →</a></div>
-  </article>`).join("") : '<div class="empty">没有匹配的已复核情报。请更换分类或搜索词。</div>';
-}
-function renderWeekly() {
-  const top = reviewedSignals().sort((a, b) => (b.priority === "high") - (a.priority === "high") || b.confidence - a.confidence).slice(0, 3);
-  $("#weekly-preview").innerHTML = top.map((item) => `<article><strong>${escapeHtml(item.conclusion)}</strong><span>${escapeHtml(item.source.name)} · ${localDate(item.source.publishedAt)}</span></article>`).join("");
-  $("#report-judgements").innerHTML = top.map((item) => `<section class="judgement"><h3>${escapeHtml(item.conclusion)}</h3><p><strong>为什么现在：</strong>${escapeHtml(item.whyNow)}</p><p><strong>影响：</strong>${escapeHtml((item.impact || []).join("；"))}</p><div class="evidence">证据：<a href="${escapeHtml(item.source.url)}" target="_blank" rel="noreferrer">${escapeHtml(item.source.name)} · ${localDate(item.source.publishedAt)} ↗</a> · 人工复核：${item.reviewed ? "是" : "否"}</div></section>`).join("");
-  const actions = [...new Set(top.flatMap((item) => item.action || []))].slice(0, 5);
-  $("#report-actions").innerHTML = actions.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>暂无行动项</li>";
-}
-function renderVendors() { $("#vendor-list").innerHTML = vendors.map((vendor) => `<article class="vendor"><div class="vendor-top"><strong>${vendor.name}</strong><span class="trend">${vendor.trend}</span></div><p>${vendor.verdict}</p><p class="action">建议：${vendor.action}</p></article>`).join(""); }
-function renderSources() { $("#source-catalog").innerHTML = state.sources.length ? state.sources.map((source) => `<article class="panel source-card"><p class="eyebrow">${escapeHtml(source.type)}</p><h2>${escapeHtml(source.name)}</h2><p>分类：${escapeHtml(source.category)} · 实体：${escapeHtml((source.entities || []).join(" / "))}</p><a class="text-link" href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">打开公开来源 ↗</a></article>`).join("") : '<div class="empty">未能读取 sources.json。</div>'; }
-function renderEvalFollowup(results) {
-  const target = $("#eval-followup");
-  if (!results || results.status !== "real") { target.innerHTML = ""; return; }
-  const rows = results.configurations || []; const bestQuality = [...rows].sort((a, b) => b.quality - a.quality)[0]; const bestValue = [...rows].sort((a, b) => a.costCny - b.costCny)[0]; const slowest = [...rows].sort((a, b) => b.latencyMs.p95 - a.latencyMs.p95)[0];
-  target.innerHTML = `<section class="panel eval-insight"><div class="panel-heading"><div><p class="eyebrow">本次运行的谨慎解读</p><h2>先做什么，再决定是否扩容</h2></div><span class="tag neutral">自动指标，待人工抽检</span></div><div class="insight-grid"><article><strong>质量信号最高</strong><p>${escapeHtml(bestQuality.label)} 在自动规则评分与引用命中上领先（${bestQuality.quality} / ${bestQuality.citationHitRate}%）；但这不等于人工事实性结论。</p></article><article><strong>成本最低</strong><p>${escapeHtml(bestValue.label)} 本次 30 题成本为 ¥${Number(bestValue.costCny).toFixed(4)}，可作为低成本基线配置。</p></article><article><strong>需要优先修复</strong><p>三组 JSON 合法率均偏低；先强化结构化输出约束与 schema 校验，再把结果用于业务流程。</p></article></div><div class="method-grid"><article><h3>指标口径</h3><p>“质量”是关键词命中、引用编号命中与必填字段的规则加权信号；不是人工主观评分，也不是官方榜单。</p></article><article><h3>实验边界</h3><p>30 道公开合成题、同一厂商 3 组配置。${escapeHtml(slowest.label)} 的 p95 为 ${slowest.latencyMs.p95} ms，不能据此推断其他场景或厂商。</p></article><article><h3>下一步</h3><p>按 <code>data/eval-review-template.json</code> 对每组 5 个样本人工评分；再补充结构化 JSON 指令后复跑同一题集。</p></article></div></section>`;
-}
-function renderEval() {
-  const results = state.evalResults; const body = $("#eval-body");
-  if (!results || results.status !== "real") { body.innerHTML = '<tr><td colspan="7" class="empty">尚未运行真实评测。运行脚本前，页面不会展示任何模拟分数。</td></tr>'; renderEvalFollowup(null); return; }
-  $("#eval-notice").innerHTML = `<strong>真实运行 · ${escapeHtml(results.provider)}</strong><span>运行时间：${escapeHtml(displayRunTime(results.runAt))}（北京时间） · 实际成本：¥${Number(results.actualCostCny || 0).toFixed(4)} · 人工复核：${escapeHtml(results.humanReview || "pending")}</span>`;
-  $("#eval-run-meta").textContent = `真实运行 · ${results.configurations.reduce((n, item) => n + item.samples, 0)} 次调用 · 题集 ${results.datasetVersion}`;
-  $("#eval-review-state").textContent = results.humanReview === "complete" ? "人工复核已完成" : "人工复核待完成";
-  body.innerHTML = results.configurations.map((row) => `<tr><td><strong>${escapeHtml(row.label)}</strong><br><small>${escapeHtml(row.model)} · ${escapeHtml(row.thinking)}</small></td><td>${row.quality}</td><td>${row.citationHitRate}%</td><td>${row.jsonValidRate}%</td><td>${row.latencyMs.p50} / ${row.latencyMs.p95} ms</td><td>¥${row.costCny}</td><td>${row.failureRate}%</td></tr>`).join("");
-  renderEvalFollowup(results);
-}
-function renderAll() { renderMetrics(); renderSignals(); renderWeekly(); renderVendors(); renderSources(); renderEval(); }
-
-function setView(view) {
-  if (!labels[view]) return; state.view = view;
-  $$('[id$="-view"]').forEach((panel) => panel.classList.toggle("is-visible", panel.id === `${view}-view`));
-  $$("[data-view]").forEach((item) => item.classList.toggle("is-active", item.dataset.view === view));
-  $("#crumb").textContent = labels[view];
-  if (location.hash !== `#${view}`) history.replaceState(null, "", `#${view}`);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-document.addEventListener("click", (event) => {
-  const viewLink = event.target.closest("[data-view]"); if (viewLink) { event.preventDefault(); setView(viewLink.dataset.view); }
-  const filter = event.target.closest("[data-filter]"); if (filter) { state.filter = filter.dataset.filter; $$("[data-filter]").forEach((button) => button.classList.toggle("is-selected", button === filter)); renderSignals(); }
-});
-$("#global-search").addEventListener("input", (event) => { state.query = event.target.value.trim(); if (state.view !== "radar") setView("radar"); renderSignals(); });
-window.addEventListener("hashchange", () => setView(location.hash.slice(1) || "radar"));
-
-async function boot() {
-  try {
-    const [signals, sources, evalResults] = await Promise.all([fetch("data/signals.json"), fetch("data/sources.json"), fetch("data/eval-results.json")]);
-    if (!signals.ok || !sources.ok || !evalResults.ok) throw new Error("数据文件无法读取");
-    state.signals = await signals.json(); state.sources = await sources.json(); state.evalResults = await evalResults.json();
-    if (!Array.isArray(state.signals) || !Array.isArray(state.sources)) throw new Error("数据格式错误");
-    renderAll(); setView(location.hash.slice(1) || "radar");
-  } catch (error) {
-    $("#pipeline-status").textContent = "本地数据加载失败";
-    $("#signal-list").innerHTML = `<div class="empty">无法加载本地数据：${escapeHtml(error.message)}。请通过本地 HTTP 服务访问。</div>`;
-    toast("数据加载失败，请检查本地服务");
-  }
-}
+function modelMatches(p){const ok=evidenceFor(p.id).some(i=>state.evidenceFilter==="全部"||i.type===state.evidenceFilter);return(state.modelRegion==="全部"||p.region===state.modelRegion)&&ok}
+function recommendationFor(i){if(i.metrics.latencyP95>5000)return"适合非实时、高价值且有人审的任务";if(i.metrics.jsonValidRate<50)return"适合文本任务；结构化输出须加 schema 约束";if(i.metrics.costCny<=.01)return"适合作为成本敏感业务的基线配置";return"适合在人工抽检后继续验证的复杂任务"}
+function renderScenarioCompare(){const r=localEvidence();$("#scenario-compare").innerHTML=r.length?r.map(i=>`<tr><td><strong>${escapeHtml(evidenceDisplayLabel(i))}</strong><br><small>同题集、同脚本</small></td><td>覆盖 10 题<br><small>纳入同次运行</small></td><td>覆盖 10 题<br><small>纳入同次运行</small></td><td>覆盖 10 题<br><small>JSON ${i.metrics.jsonValidRate}%</small></td><td>${i.metrics.latencyP50} / ${i.metrics.latencyP95} ms</td><td>¥${i.metrics.costCny}</td><td>${recommendationFor(i)}</td></tr>`).join(""):'<tr><td colspan="7" class="empty">尚无可比较的本地实测证据。</td></tr>'}
+function gapFor(i){const g=[];if(i.metrics.jsonValidRate<50)g.push({p:"高",t:"结构化可用性不足",d:`JSON 合法率 ${i.metrics.jsonValidRate}%，会增加下游解析与人工兜底成本。`,a:"使用严格 JSON 指令、schema 校验和失败回退后复跑。"});if(i.metrics.citationHitRate<85)g.push({p:"中",t:"证据引用需要校准",d:`引用命中 ${i.metrics.citationHitRate}%，不宜直接作为可追溯答案上线。`,a:"补充引用格式示例，并对遗漏引用样本做人工复核。"});if(i.metrics.latencyP95>2000)g.push({p:"中",t:"长尾延迟影响体验",d:`P95 为 ${i.metrics.latencyP95} ms，可能影响即时交互体验。`,a:"为高延迟配置设置异步提示、超时回退或模型路由阈值。"});if(i.metrics.failureRate>0)g.push({p:"高",t:"稳定性待处理",d:`失败率 ${i.metrics.failureRate}%。`,a:"保留错误类型、重试策略和兜底模型记录后再扩大流量。"});return g}
+function renderGapAnalysis(){const g=localEvidence().flatMap(i=>gapFor(i).map(x=>({...x,l:evidenceDisplayLabel(i)}))).slice(0,5);$("#gap-analysis").innerHTML=g.length?g.map(x=>`<article class="gap-card"><span class="tag ${x.p==="高"?"high":"medium"}">${x.p}优先级</span><strong>${escapeHtml(x.t)}</strong><p>${escapeHtml(x.l)}：${escapeHtml(x.d)}</p><p class="action">建议：${escapeHtml(x.a)}</p></article>`).join(""):'<p class="body-copy">当前本地实测未识别出需提示的差距。</p>'}
+function renderModelReview(){const r=state.modelReview,t=$("#model-review-list");if(!r||!Array.isArray(r.samples)){t.innerHTML='<div class="empty">未能读取人工复核模板。</div>';return}$("#model-review-status").textContent=r.status==="complete"?"人工复核已完成":"待复核";t.innerHTML=r.samples.map(s=>`<article><strong>${escapeHtml(configLabel(s.configuration))}</strong><span>${escapeHtml(s.caseId)}</span><span>事实性 / 完整性 / 引用 / 结构化：待评分</span><span>${escapeHtml(s.issueType||"待标注")}</span></article>`).join("")}
+function renderModelMap(){const c=state.models.filter(modelMatches),t=$("#model-cards");t.innerHTML=c.length?c.map(p=>{const e=evidenceFor(p.id).filter(i=>state.evidenceFilter==="全部"||i.type===state.evidenceFilter),l=e.filter(i=>i.type==="local"),b=l.length?'<span class="tag evidence-local">本地实测</span>':'<span class="tag evidence-official">官方资料</span>';return`<article class="model-card"><div class="model-card-top"><div><p class="eyebrow">${escapeHtml(p.region)} · ${escapeHtml(p.vendor)}</p><h3>${escapeHtml(p.model)}</h3></div>${b}</div><p class="model-version">${escapeHtml(p.version)}</p><div class="capability-tags">${p.capabilities.map(i=>`<span>${escapeHtml(i)}</span>`).join("")}</div><dl><div><dt>上下文</dt><dd>${escapeHtml(p.context)}</dd></div><div><dt>部署</dt><dd>${escapeHtml(p.deployment.join(" / "))}</dd></div><div><dt>适用场景</dt><dd>${escapeHtml(p.fit.join(" / "))}</dd></div></dl>${l.length?`<p class="model-local-metric">本地运行：${l.length} 组配置 · ${l.reduce((n,i)=>n+i.sampleCount,0)} 个样本</p>`:'<p class="model-public-note">尚无本项目同题集运行，不展示效果分数。</p>'}<p class="model-limit">限制：${escapeHtml(p.limitations.join("；"))}</p><div class="model-evidence-links">${e.map(i=>`<a href="${escapeHtml(i.source.url)}" target="_blank" rel="noreferrer">${evidenceLabel[i.type]||"证据"}：${escapeHtml(i.source.name)} ↗</a>`).join("")}</div></article>`}).join(""):'<div class="empty">该筛选条件下没有模型证据。</div>';renderScenarioCompare();renderGapAnalysis();renderModelReview()}
+function validateModelData(m,e,r){if(!Array.isArray(m)||!Array.isArray(e)||!r||!Array.isArray(r.samples))throw new Error("模型数据格式错误");const ids=new Set(m.map(i=>i.id));if(m.some(i=>!i.id||!i.model||!i.region||!i.source?.url))throw new Error("模型档案字段缺失");if(e.some(i=>!ids.has(i.modelId)||!i.type||!i.source?.url||!i.runAt))throw new Error("模型证据字段缺失");if(e.some(i=>i.type!=="local"&&Object.keys(i.metrics||{}).length))throw new Error("公开资料不得写入本地实测指标")}
+function renderAll(){renderMetrics();renderSignals();renderWeekly();renderVendors();renderSources();renderEval();renderModelMap()}
+function setView(v){if(!labels[v])return;state.view=v;$$('[id$="-view"]').forEach(p=>p.classList.toggle("is-visible",p.id===`${v}-view`));$$("[data-view]").forEach(i=>i.classList.toggle("is-active",i.dataset.view===v));$("#crumb").textContent=labels[v];if(location.hash!==`#${v}`)history.replaceState(null,"",`#${v}`);window.scrollTo({top:0,behavior:"smooth"})}
+document.addEventListener("click",e=>{const v=e.target.closest("[data-view]");if(v){e.preventDefault();setView(v.dataset.view)}const f=e.target.closest("[data-filter]");if(f){state.filter=f.dataset.filter;$$("[data-filter]").forEach(b=>b.classList.toggle("is-selected",b===f));renderSignals()}const r=e.target.closest("[data-model-region]");if(r){state.modelRegion=r.dataset.modelRegion;$$('[data-model-region]').forEach(b=>b.classList.toggle("is-selected",b===r));renderModelMap()}const x=e.target.closest("[data-evidence-filter]");if(x){state.evidenceFilter=x.dataset.evidenceFilter;$$('[data-evidence-filter]').forEach(b=>b.classList.toggle("is-selected",b===x));renderModelMap()}});
+$("#global-search").addEventListener("input",e=>{state.query=e.target.value.trim();if(state.view!=="radar")setView("radar");renderSignals()});window.addEventListener("hashchange",()=>setView(location.hash.slice(1)||"radar"));
+async function boot(){try{const rs=await Promise.all(["signals","sources","eval-results","models","model-evidence","model-review"].map(n=>fetch(`data/${n}.json`)));if(rs.some(r=>!r.ok))throw new Error("数据文件无法读取");const [signals,sources,evalResults,models,modelEvidence,modelReview]=await Promise.all(rs.map(r=>r.json()));if(!Array.isArray(signals)||!Array.isArray(sources))throw new Error("情报数据格式错误");validateModelData(models,modelEvidence,modelReview);Object.assign(state,{signals,sources,evalResults,models,modelEvidence,modelReview});renderAll();setView(location.hash.slice(1)||"radar")}catch(e){$("#pipeline-status").textContent="本地数据加载失败";$("#signal-list").innerHTML=`<div class="empty">无法加载本地数据：${escapeHtml(e.message)}。请通过本地 HTTP 服务访问。</div>`;toast("数据加载失败，请检查本地服务")}}
 boot();
