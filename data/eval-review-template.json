@@ -1,1 +1,134 @@
-{"status":"pending","instruction":"真实运行后，从每个配置随机抽取 5 条样本。人工按 1-5 分填写事实性、完整性、引用正确性；未填写前页面必须保持“人工复核待完成”。","fields":["configuration","caseId","factuality_1_to_5","completeness_1_to_5","citation_correctness_1_to_5","reviewerNote"],"samples":[]}
+{
+  "status": "pending",
+  "instruction": "每组抽取 5 条，人工填写 1-5 分；不要把模型思考过程写入复核表。",
+  "fields": [
+    "configuration",
+    "caseId",
+    "factuality_1_to_5",
+    "completeness_1_to_5",
+    "citation_correctness_1_to_5",
+    "reviewerNote"
+  ],
+  "samples": [
+    {
+      "configuration": "flash-direct",
+      "caseId": "qa-01",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "flash-direct",
+      "caseId": "qa-02",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "flash-direct",
+      "caseId": "qa-03",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "flash-direct",
+      "caseId": "qa-04",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "flash-direct",
+      "caseId": "qa-05",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "flash-thinking",
+      "caseId": "qa-01",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "flash-thinking",
+      "caseId": "qa-02",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "flash-thinking",
+      "caseId": "qa-03",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "flash-thinking",
+      "caseId": "qa-04",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "flash-thinking",
+      "caseId": "qa-05",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "pro-thinking",
+      "caseId": "qa-01",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "pro-thinking",
+      "caseId": "qa-02",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "pro-thinking",
+      "caseId": "qa-03",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "pro-thinking",
+      "caseId": "qa-04",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    },
+    {
+      "configuration": "pro-thinking",
+      "caseId": "qa-05",
+      "factuality_1_to_5": null,
+      "completeness_1_to_5": null,
+      "citation_correctness_1_to_5": null,
+      "reviewerNote": ""
+    }
+  ]
+}
