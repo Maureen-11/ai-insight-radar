@@ -4,6 +4,8 @@
 
 [中文](#中文说明) · [English](#english)
 
+**在线预览 / Live demo:** [https://maureen-11.github.io/ai-insight-radar/](https://maureen-11.github.io/ai-insight-radar/)
+
 ## 中文说明
 
 面向面试展示的「AI 行业情报与模型评测平台」静态 Demo。它的重点不是堆新闻，而是清楚展示一条研究判断如何从公开信号进入人工复核，并落到可执行行动。
@@ -17,6 +19,10 @@ python -m http.server 4173
 ```
 
 打开 `http://127.0.0.1:4173/`。不要直接双击 HTML 文件，否则浏览器会拦截读取本地 JSON。
+
+### 在线预览
+
+GitHub Pages 部署完成后，可直接访问：[AI Insight Radar 在线预览](https://maureen-11.github.io/ai-insight-radar/)。若首次部署尚未完成，请等待 GitHub Actions 的 `Deploy GitHub Pages` 工作流显示成功。
 
 ## v0.2 的研究界面
 
@@ -114,6 +120,10 @@ python -m http.server 4173
 ```
 
 Open `http://127.0.0.1:4173/`. Use an HTTP server instead of opening the HTML file directly, because browsers block local JSON requests.
+
+### Live demo
+
+After the GitHub Pages deployment completes, open [AI Insight Radar live demo](https://maureen-11.github.io/ai-insight-radar/). On a first deployment, wait until the `Deploy GitHub Pages` GitHub Actions workflow succeeds.
 
 ### Public-source workflow
 
