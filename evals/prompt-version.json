@@ -1,0 +1,8 @@
+{
+  "version": "prompt-v1",
+  "datasetVersion": "business-scenarios-v1",
+  "status": "baseline",
+  "change": "Initial citation-constrained business research prompt",
+  "reviewBoundary": "Automatic assertions are not human review."
+}
+

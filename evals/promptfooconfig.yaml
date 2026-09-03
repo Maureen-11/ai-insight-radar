@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: AI Insight Radar business-scenario regression
+
+prompts:
+  - |
+    你是企业研究助手。只能依据参考材料回答，不得补充材料外事实。
+    {{task}}
+    参考材料：
+    {{context}}
+    请返回简洁答案，并写出引用编号。
+
+providers:
+  - id: file://provider.py
+    label: DeepSeek V4 Flash · 非思考
+    config:
+      model: deepseek-v4-flash
+      thinking: disabled
+      promptVersion: prompt-v1
+  - id: file://provider.py
+    label: DeepSeek V4 Flash · 思考 high
+    config:
+      model: deepseek-v4-flash
+      thinking: enabled
+      reasoningEffort: high
+      promptVersion: prompt-v1
+  - id: file://provider.py
+    label: DeepSeek V4 Pro · 思考 high
+    config:
+      model: deepseek-v4-pro
+      thinking: enabled
+      reasoningEffort: high
+      promptVersion: prompt-v1
+
+tests:
+  - file://generate_tests.py:generate_tests
+
+defaultTest:
+  threshold: 0.7
+  assert:
+    - type: python
+      value: file://assertions.py:evaluate_business_output
+      metric: business_quality
+
+outputPath:
+  - ../work/promptfoo/results.json
+  - ../work/promptfoo/results.html
+

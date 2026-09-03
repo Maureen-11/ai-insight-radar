@@ -51,7 +51,12 @@ def run(live, config, dataset, budget):
                     response=request_live(config,payload,key,config["generation"]["timeoutSeconds"]); text=response["choices"][0]["message"].get("content",""); usage=response.get("usage",{}); charge=cost_cny(usage,price,config["usdToCny"])
                 else: text=mock_answer(case); usage={"prompt_tokens":0,"completion_tokens":0}; charge=0
                 latency=(time.perf_counter()-start)*1000; metrics=score(case,text); spent+=charge
-                rows.append({"scenario":scenario,"caseId":case["id"],"latencyMs":round(latency,1),"costCny":charge,"usage":usage,**metrics}); local.append({"configuration":item["id"],"caseId":case["id"],"response":text,**metrics})
+                issue_types=[]
+                if metrics["quality"]<80: issue_types.append("关键信息遗漏")
+                if metrics["citationHit"]<1: issue_types.append("引用错误")
+                if not metrics["jsonValid"]: issue_types.append("格式错误")
+                if not metrics["schemaValid"]: issue_types.append("必填字段遗漏")
+                rows.append({"scenario":scenario,"caseId":case["id"],"latencyMs":round(latency,1),"costCny":charge,"usage":usage,**metrics}); local.append({"configuration":item["id"],"caseId":case["id"],"response":text,"automaticIssueTypes":issue_types,**metrics})
             except Exception as exc: rows.append({"scenario":scenario,"caseId":case["id"],"error":str(exc)[:200],"latencyMs":round((time.perf_counter()-start)*1000,1),"costCny":0})
         ok=[r for r in rows if "error" not in r]; result.append({"id":item["id"],"label":item["label"],"model":item["model"],"thinking":item["thinking"],"samples":len(rows),"quality":round(statistics.mean([r["quality"] for r in ok]),1) if ok else 0,"citationHitRate":round(100*statistics.mean([r["citationHit"] for r in ok]),1) if ok else 0,"jsonValidRate":round(100*statistics.mean([r["jsonValid"] for r in ok]),1) if ok else 0,"latencyMs":{"p50":round(percentile([r["latencyMs"] for r in ok],.5),1),"p95":round(percentile([r["latencyMs"] for r in ok],.95),1)},"costCny":round(sum(r["costCny"] for r in rows),4),"failureRate":round(100*(len(rows)-len(ok))/max(1,len(rows)),1)})
     return result, local, spent
@@ -61,13 +66,14 @@ def main():
     print(f"{total} calls planned; budget ceiling: CNY {budget:.2f}. Worst-case estimate: CNY {estimate:.4f}. {'LIVE' if args.live else 'MOCK (no API calls)'}")
     if args.live and estimate > budget: raise RuntimeError("最坏情况费用预估超过预算；请降低题数、maxTokens 或提高已明确授权的预算。")
     rows, raw, spent=run(args.live,config,dataset,budget)
-    status="real" if args.live else "mock"; output={"schemaVersion":"0.3.0","status":status,"runAt":datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),"provider":config["provider"],"datasetVersion":dataset["version"],"budgetCny":budget,"estimatedWorstCaseCny":round(estimate,4),"actualCostCny":round(spent,4),"pricingSnapshot":config["pricingSnapshot"],"configurations":rows,"humanReview":"pending"}
+    status="real" if args.live else "mock"; output={"schemaVersion":"0.6.0","status":status,"runAt":datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),"provider":config["provider"],"datasetVersion":dataset["version"],"promptVersion":"prompt-v1","budgetCny":budget,"estimatedWorstCaseCny":round(estimate,4),"actualCostCny":round(spent,4),"pricingSnapshot":config["pricingSnapshot"],"configurations":rows,"humanReview":"pending"}
     args.out.parent.mkdir(parents=True, exist_ok=True); args.out.write_text(json.dumps(output,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     LOCAL.mkdir(parents=True,exist_ok=True); (LOCAL/"latest-responses.json").write_text(json.dumps(raw,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     if args.live:
-        review={"status":"pending","instruction":"每组抽取 5 条，人工填写 1-5 分；不要把模型思考过程写入复核表。","fields":["configuration","caseId","factuality_1_to_5","completeness_1_to_5","citation_correctness_1_to_5","reviewerNote"],"samples":[]}
+        review={"status":"pending","instruction":"每组分层抽取 5 条，覆盖知识问答、长文总结和结构化抽取；人工填写 1-5 分并标注 Badcase，不记录模型思考过程。","fields":["configuration","caseId","factuality_1_to_5","completeness_1_to_5","citation_correctness_1_to_5","structured_usability_1_to_5","issueType","reviewerNote"],"samples":[]}
+        review_ids={"qa-01","qa-06","sum-01","sum-06","ext-01"}
         for item in config["configurations"]:
-            review["samples"] += [{"configuration":item["id"],"caseId":row["caseId"],"factuality_1_to_5":None,"completeness_1_to_5":None,"citation_correctness_1_to_5":None,"reviewerNote":""} for row in raw if row["configuration"]==item["id"]][:5]
+            review["samples"] += [{"configuration":item["id"],"caseId":row["caseId"],"factuality_1_to_5":None,"completeness_1_to_5":None,"citation_correctness_1_to_5":None,"structured_usability_1_to_5":None,"issueType":"待标注","reviewerNote":""} for row in raw if row["configuration"]==item["id"] and row["caseId"] in review_ids]
         (DATA/"eval-review-template.json").write_text(json.dumps(review,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(f"Wrote {args.out}; actual cost: CNY {spent:.4f}")
 if __name__=="__main__": main()

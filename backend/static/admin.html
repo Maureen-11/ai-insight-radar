@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Insight Radar · 研究后台</title>
+  <link rel="stylesheet" href="/admin-assets/admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><p>LOCAL RESEARCH WORKBENCH</p><h1>AI Insight Radar 研究后台</h1></div>
+    <div class="top-actions"><span id="health">正在读取数据库…</span><button id="export">导出公开站点</button></div>
+  </header>
+  <main>
+    <section class="summary" id="summary"></section>
+    <nav class="tabs"><button class="active" data-tab="signals">情报复核</button><button data-tab="evals">模型抽检</button></nav>
+    <section id="signals-tab" class="workspace">
+      <aside class="queue">
+        <div class="filters">
+          <select id="status"><option value="pending">待复核</option><option value="needs_verification">待验证</option><option value="returned">退回</option><option value="approved">已通过</option><option value="ignored">已忽略</option><option value="all">全部</option></select>
+          <input id="search" placeholder="搜索标题、来源">
+        </div>
+        <div id="queue-list"></div>
+      </aside>
+      <article class="editor empty" id="editor">从左侧选择一条情报开始复核。</article>
+    </section>
+    <section id="evals-tab" class="evals hidden">
+      <div class="notice">这里显示真实运行的回答摘录。评分必须由复核者填写，系统不会自动冒充人工结论。</div>
+      <div id="eval-list"></div>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="/admin-assets/admin.js"></script>
+</body>
+</html>
+

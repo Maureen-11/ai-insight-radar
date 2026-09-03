@@ -1,13 +1,22 @@
 {
-  "status":"pending",
-  "instruction":"从每个本地实测配置中抽取 5 条样本，人工填写 1-5 分，并标注问题类型；不要录入模型思考过程。",
-  "fields":["configuration","caseId","factuality_1_to_5","completeness_1_to_5","citation_correctness_1_to_5","structured_usability_1_to_5","issueType","reviewerNote"],
-  "samples":[
+  "status": "pending",
+  "instruction": "每组分层抽取 5 条，覆盖知识问答、长文总结和结构化抽取；人工填写 1-5 分并标注 Badcase，不记录模型思考过程。",
+  "fields": ["configuration", "caseId", "factuality_1_to_5", "completeness_1_to_5", "citation_correctness_1_to_5", "structured_usability_1_to_5", "issueType", "reviewerNote"],
+  "samples": [
     {"configuration":"flash-direct","caseId":"qa-01","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
+    {"configuration":"flash-direct","caseId":"qa-06","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
     {"configuration":"flash-direct","caseId":"sum-01","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
+    {"configuration":"flash-direct","caseId":"sum-06","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
+    {"configuration":"flash-direct","caseId":"ext-01","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
     {"configuration":"flash-thinking","caseId":"qa-01","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
+    {"configuration":"flash-thinking","caseId":"qa-06","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
+    {"configuration":"flash-thinking","caseId":"sum-01","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
+    {"configuration":"flash-thinking","caseId":"sum-06","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
     {"configuration":"flash-thinking","caseId":"ext-01","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
     {"configuration":"pro-thinking","caseId":"qa-01","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
+    {"configuration":"pro-thinking","caseId":"qa-06","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
+    {"configuration":"pro-thinking","caseId":"sum-01","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
+    {"configuration":"pro-thinking","caseId":"sum-06","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""},
     {"configuration":"pro-thinking","caseId":"ext-01","factuality_1_to_5":null,"completeness_1_to_5":null,"citation_correctness_1_to_5":null,"structured_usability_1_to_5":null,"issueType":"待标注","reviewerNote":""}
   ]
 }

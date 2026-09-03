@@ -21,6 +21,7 @@ from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
+WORK = ROOT / "work"
 NS = {"atom": "http://www.w3.org/2005/Atom", "content": "http://purl.org/rss/1.0/modules/content/"}
 
 
@@ -98,7 +99,7 @@ def collect(sources: list[dict[str, Any]], existing: list[dict[str, Any]], timeo
     additions: list[dict[str, Any]] = []
     failures: list[dict[str, str]] = []
     for source in sources:
-        if not source.get("enabled", True):
+        if not source.get("enabled", True) or source.get("kind", "feed") != "feed":
             continue
         try:
             for item in parse_feed(fetcher(source["url"], timeout), source):
@@ -113,16 +114,18 @@ def collect(sources: list[dict[str, Any]], existing: list[dict[str, Any]], timeo
 def main() -> int:
     parser = argparse.ArgumentParser(description="Collect public Atom/RSS metadata for manual review.")
     parser.add_argument("--sources", type=Path, default=DATA / "sources.json")
-    parser.add_argument("--out", type=Path, default=DATA / "inbox.json")
-    parser.add_argument("--report", type=Path, default=DATA / "collection-report.json")
+    parser.add_argument("--out", type=Path, default=WORK / "inbox.json")
+    parser.add_argument("--report", type=Path, default=WORK / "collection-report.json")
     parser.add_argument("--timeout", type=int, default=15)
     args = parser.parse_args()
     sources = read_json(args.sources, []); existing = read_json(args.out, [])
     if not isinstance(sources, list) or not isinstance(existing, list):
         raise SystemExit("sources.json 和 inbox.json 必须是 JSON 数组")
     merged, failures = collect(sources, existing, args.timeout)
+    args.out.parent.mkdir(parents=True, exist_ok=True); args.report.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    report = {"collectedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "configuredSources": len(sources), "inboxBefore": len(existing), "added": len(merged) - len(existing), "inboxAfter": len(merged), "failures": failures, "note": "失败来源不会清空已有 inbox；所有条目均需人工复核后才能进入 signals.json。"}
+    configured = sum(1 for source in sources if source.get("enabled", True) and source.get("kind", "feed") == "feed")
+    report = {"collectedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "configuredSources": configured, "inboxBefore": len(existing), "added": len(merged) - len(existing), "inboxAfter": len(merged), "failures": failures, "note": "失败来源不会清空已有 inbox；所有条目均需人工复核后才能进入 signals.json。"}
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False))
     return 0

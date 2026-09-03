@@ -1,0 +1,50 @@
+name: Build research inbox and reviewed reports
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore private processing state
+        uses: actions/cache/restore@v4
+        with:
+          path: work
+          key: research-work-${{ github.run_id }}
+          restore-keys: research-work-
+      - name: Collect public feed metadata
+        run: python scripts/collect_public_sources.py
+      - name: Detect official page changes
+        run: python scripts/monitor_public_pages.py
+      - name: Generate reviewed-only reports and RSS
+        run: python scripts/generate_publication.py
+      - name: Run offline tests
+        run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Save processing state
+        uses: actions/cache/save@v4
+        with:
+          path: work
+          key: research-work-${{ github.run_id }}
+      - name: Upload manual-review package
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-review-${{ github.run_id }}
+          path: |
+            work/inbox.json
+            work/collection-report.json
+            work/page-changes.json
+            data/source-health.json
+            data/weekly-report.json
+            data/vendor-timeline.json
+            data/report-manifest.json
+            reports/*.md
+            feed.xml
+          retention-days: 30
+

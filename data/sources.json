@@ -1,6 +1,10 @@
 [
-  {"id":"evalscope-releases","name":"EvalScope Releases","url":"https://github.com/modelscope/evalscope/releases.atom","type":"GitHub Releases / Atom","category":"生态","entities":["ModelScope","EvalScope"],"enabled":true},
-  {"id":"opencompass-releases","name":"OpenCompass Releases","url":"https://github.com/open-compass/opencompass/releases.atom","type":"GitHub Releases / Atom","category":"生态","entities":["OpenCompass"],"enabled":true},
-  {"id":"transformers-releases","name":"Hugging Face Transformers Releases","url":"https://github.com/huggingface/transformers/releases.atom","type":"GitHub Releases / Atom","category":"模型","entities":["Hugging Face","Transformers"],"enabled":true},
-  {"id":"huggingface-blog","name":"Hugging Face Blog","url":"https://huggingface.co/blog/feed.xml","type":"RSS","category":"产品","entities":["Hugging Face"],"enabled":true}
+  {"id":"evalscope-releases","name":"EvalScope Releases","url":"https://github.com/modelscope/evalscope/releases.atom","kind":"feed","type":"GitHub Releases / Atom","category":"生态","entities":["ModelScope","EvalScope"],"enabled":true},
+  {"id":"opencompass-releases","name":"OpenCompass Releases","url":"https://github.com/open-compass/opencompass/releases.atom","kind":"feed","type":"GitHub Releases / Atom","category":"生态","entities":["OpenCompass"],"enabled":true},
+  {"id":"transformers-releases","name":"Hugging Face Transformers Releases","url":"https://github.com/huggingface/transformers/releases.atom","kind":"feed","type":"GitHub Releases / Atom","category":"模型","entities":["Hugging Face","Transformers"],"enabled":true},
+  {"id":"huggingface-blog","name":"Hugging Face Blog","url":"https://huggingface.co/blog/feed.xml","kind":"feed","type":"RSS","category":"产品","entities":["Hugging Face"],"enabled":true},
+  {"id":"deepseek-updates","name":"DeepSeek API Updates","url":"https://api-docs.deepseek.com/updates","kind":"page","type":"厂商更新页","category":"模型","entities":["DeepSeek"],"enabled":true},
+  {"id":"openai-changelog","name":"OpenAI API Changelog","url":"https://platform.openai.com/docs/changelog","kind":"page","type":"厂商更新页","category":"产品","entities":["OpenAI"],"enabled":true},
+  {"id":"claude-release-notes","name":"Claude Platform Release Notes","url":"https://platform.claude.com/docs/en/release-notes/overview","kind":"page","type":"厂商更新页","category":"模型","entities":["Anthropic","Claude"],"enabled":true},
+  {"id":"gemini-release-notes","name":"Gemini API Release Notes","url":"https://ai.google.dev/gemini-api/docs/changelog","kind":"page","type":"厂商更新页","category":"模型","entities":["Google","Gemini"],"enabled":true}
 ]

@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-09-03T07:45:24.667335Z",
+  "sources": [
+    {
+      "sourceId": "deepseek-updates",
+      "name": "DeepSeek API Updates",
+      "status": "ok",
+      "checkedAt": "2026-09-03T07:45:20.199437Z",
+      "lastHash": "001c9617b6e4"
+    },
+    {
+      "sourceId": "openai-changelog",
+      "name": "OpenAI API Changelog",
+      "status": "ok",
+      "checkedAt": "2026-09-03T07:45:20.199437Z",
+      "lastHash": "26a98ef0efcb"
+    },
+    {
+      "sourceId": "claude-release-notes",
+      "name": "Claude Platform Release Notes",
+      "status": "ok",
+      "checkedAt": "2026-09-03T07:45:20.199437Z",
+      "lastHash": "06f188a6e43d"
+    },
+    {
+      "sourceId": "gemini-release-notes",
+      "name": "Gemini API Release Notes",
+      "status": "ok",
+      "checkedAt": "2026-09-03T07:45:20.199437Z",
+      "lastHash": "7be1a0154fe7"
+    }
+  ]
+}

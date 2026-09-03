@@ -8,7 +8,7 @@
 
 ## 中文说明
 
-面向面试展示的「AI 行业情报与模型评测平台」静态 Demo。它的重点不是堆新闻，而是清楚展示一条研究判断如何从公开信号进入人工复核，并落到可执行行动。
+面向面试展示、也可实际操作的「AI 行业情报与模型评测平台」。它的重点不是堆新闻，而是清楚展示一条研究判断如何从公开信号进入人工复核，并落到可执行行动。公开端仍是无密钥静态网站；审核后台只在本机运行。
 
 ## 运行
 
@@ -24,23 +24,40 @@ python -m http.server 4173
 
 GitHub Pages 部署完成后，可直接访问：[AI Insight Radar 在线预览](https://maureen-11.github.io/ai-insight-radar/)。若首次部署尚未完成，请等待 GitHub Actions 的 `Deploy GitHub Pages` 工作流显示成功。
 
-## v0.4.0：研究工作台与模型能力地图
+## v0.5–v0.7：从静态展示到研究闭环
 
-- 情报列表默认展示：**结论、影响、建议行动**；来源是证据入口，不是装饰标签。
-- `signal.html?id=signal-001` 提供独立详情：为什么重要、证据、待验证问题、人工复核、置信度和前后导航。
-- 周报从 `data/signals.json` 中的已复核条目生成，每项都指向来源与日期。
-- 重点厂商强调最新判断与建议动作，不使用没有解释力的装饰性分数。
-- 模型能力地图可按**国内 / 海外**与**本地实测 / 官方资料**筛选；两类证据不混入同一排行榜。
-- 模型评测页只展示本项目真实运行获得的 DeepSeek 本地记录；公开资料不填充效果、延迟或成本分数。
-- 访谈页明确标为**模拟输入模板**；真实转写必须获得授权。
+- **v0.5 研究后台**：FastAPI + SQLite 导入 876 条公开待办，结合来源可信度、时效、关键词、字段完整度和重复度排序；支持忽略、待验证、通过、退回，以及结论、影响、行动和证据编辑。
+- **v0.6 评测闭环**：15 条 DeepSeek 真实输出进入人工抽检队列；事实性、完整性、引用正确性、结构化可用性与 Badcase 类型和自动指标分开保存。Promptfoo 配置用于声明式回归，不复制其源码。
+- **v0.7 情报管线**：定时采集 RSS/Atom、监控官方页面内容哈希、记录来源健康度，生成已审核周报、厂商时间线和 RSS。自动化只生成待处理材料，不自动发布研究判断。
+- 公开站仍提供结论—影响—行动卡片、情报详情、模型能力地图和证据链接；本地实测与公开资料不混排。
+
+## 本地研究后台（v0.5）
+
+首次安装：
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements-backend.txt
+```
+
+启动：
+
+```powershell
+.\.venv\Scripts\python -m uvicorn backend.app:app --host 127.0.0.1 --port 4180
+```
+
+打开 `http://127.0.0.1:4180/admin`。后台会初始化本机 `work/research.db`，可在队列中编辑并改变状态。只有字段完整且通过审核的条目才能发布；点击“导出公开数据”后才会更新 `data/signals.json`、周报、厂商时间线和 RSS。
+
+`work/`、SQLite、原始响应和处理日志均被 Git 忽略。后台不提供公网认证，因此**不要把 4180 端口暴露到公网**。
 
 ## 数据与人工复核流程
 
 ```text
-公开 RSS / Atom 元数据
-  → data/inbox.json（待复核）
-  → 人工核对事实、补充结论 / 影响 / 行动
-  → data/signals.json（正式展示）
+公开 RSS / Atom / 官方页面变化
+  → work/inbox.json + work/page-changes.json（本机或 Actions 待办）
+  → SQLite 排序、人工核对事实、编辑结论 / 影响 / 行动
+  → data/signals.json（仅已审核、脱敏的公开数据）
+  → 周报 / 厂商时间线 / feed.xml
 ```
 
 `data/signals.json` 是展示层的数据契约。每个 `Signal` 至少包含：
@@ -66,18 +83,23 @@ GitHub Pages 部署完成后，可直接访问：[AI Insight Radar 在线预览]
 
 ## 采集公开来源
 
-配置在 `data/sources.json`，第一版仅包含不需要账号或 API Key 的公开 Atom/RSS 源。运行：
+配置在 `data/sources.json`，仅包含不需要账号或 API Key 的公开源。运行：
 
 ```powershell
 python scripts/collect_public_sources.py
+python scripts/monitor_public_pages.py
+python scripts/generate_publication.py
 ```
 
 脚本会：
 
 - 只保存公开标题、日期、URL 与最多 280 字的纯文本短摘要；不保存完整第三方文章。
-- 按 URL 和稳定哈希去重，输出到 `data/inbox.json`。
+- 按 URL 和稳定哈希去重，输出到本机忽略目录 `work/inbox.json`。
 - 为待复核条目填入规则模板式的结论、影响、行动草稿，但**不会自动发布判断**。
-- 即使网络超时、XML 异常或一个来源失败，也保留已有收件箱，并写入 `data/collection-report.json`。
+- 官方更新页只保存内容哈希、变化摘要和必要元数据；本机快照在 `work/`，公开端只显示 `data/source-health.json`。
+- 即使网络超时、XML 异常或一个来源失败，也保留已有数据并记录失败来源。
+
+`.github/workflows/research-pipeline.yml` 每天北京时间 08:00 运行，也可手动触发。它把待审核材料上传为 30 天有效的 Actions Artifact，而不是直接写回 `main` 或发布结论；这条人工闸门是有意保留的。
 
 ## 真实 DeepSeek 评测
 
@@ -103,7 +125,15 @@ Key 只存在于当前终端会话，不会写入仓库。没有 `--live` 时脚
 
 当前人工抽检队列仍标为**待复核**：在完成事实性、完整性、引用正确性与结构化可用性检查前，页面不会把规则指标写成最终的人类体验结论。
 
-EvalScope 是可选的 Apache-2.0 标准评测/性能后端；Promptfoo 是后续 Agent/RAG 回归评测候选（MIT）。二者均未复制源码或 UI 到本仓库，也不会在默认流程中运行或发送数据。
+EvalScope 是可选的 Apache-2.0 标准评测/性能后端；Promptfoo 是 MIT 许可的声明式回归工具。本仓库只提供 `evals/promptfooconfig.yaml`、Python provider 和确定性断言，没有复制二者源码或 UI。
+
+Promptfoo 会真实调用模型并产生费用，因此默认不安装、不运行。准备好本机 Key 并确认预算后才执行：
+
+```powershell
+npx promptfoo@latest eval -c evals/promptfooconfig.yaml
+```
+
+每次实验记录题集版本、Prompt 版本、模型配置和运行时间。人工复核仍须在本地后台完成；系统不会把规则分数冒充人工体验结论。
 
 运行离线测试：
 
@@ -117,7 +147,8 @@ node --check signal-detail.js
 
 - 本仓库中的界面、静态数据结构、采集脚本和规则模板为本项目新增代码，采用 [MIT License](LICENSE)。
 - 项目没有复制 EvalScope、OpenCompass 或任何新闻站点的代码、文章全文或私有数据。
-- EvalScope / OpenCompass 是后续可接入的开源评测后端；接入时应保留各自许可证与来源说明。
+- [EvalScope](https://github.com/modelscope/evalscope)（Apache-2.0）是可选评测后端，[Promptfoo](https://github.com/promptfoo/promptfoo)（MIT）是可选回归工具，[OpenCompass](https://github.com/open-compass/opencompass)（Apache-2.0）仅作大型公开基准参考。
+- [TrendRadar](https://github.com/sansan0/TrendRadar) 的调度、去重和报告流程以及 [Rival](https://github.com/webdog/rival) 的页面变化监控提供了设计参考；没有复制其源码。尤其 TrendRadar 为 GPL-3.0，不作为本 MIT 仓库的代码依赖。
 - 示例来源均为公开链接。`signals.json` 的判断是面试 Demo 中经过人工整理的研究样例，应在正式使用前按链接、日期和原始资料复核。
 - 不提交 API Key、Token、真实访谈原文或未经授权的数据。
 
@@ -127,7 +158,7 @@ node --check signal-detail.js
 
 ### What this is
 
-AI Insight Radar is a static, interview-ready workbench for AI market intelligence and model evaluation. It turns public signals into structured, reviewable research rather than presenting an untraceable news feed.
+AI Insight Radar is an interview-ready AI market-intelligence and model-evaluation workbench. A local FastAPI/SQLite review desk handles private work-in-progress, while GitHub Pages publishes only reviewed, redacted data.
 
 ### Read this project in English
 
@@ -138,6 +169,7 @@ Start here:
 3. **Weekly report** — generated from reviewed signals; every judgement links back to a dated public source.
 4. **Model evaluation** — a clearly labelled local demo of comparing quality, latency, and cost on the same scenario. It is not an official benchmark result.
 5. **Capability map** — filter domestic/overseas profiles and keep locally measured evidence separate from linked official information.
+6. **Local review desk** — rank, edit, approve, return, or ignore incoming public signals before exporting them.
 
 ### Quick start
 
@@ -166,21 +198,34 @@ The key is read from the current terminal session only and is never written to t
 
 Before a live run, the script prints a conservative cost estimate based on the price snapshot and configured token ceilings. It refuses to send requests when that estimate exceeds the supplied budget.
 
+### Local review desk and automation
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements-backend.txt
+.\.venv\Scripts\python -m uvicorn backend.app:app --host 127.0.0.1 --port 4180
+```
+
+Open `http://127.0.0.1:4180/admin`. The local database, inbox, page snapshots, model responses, and logs stay under ignored `work/` paths. Do not expose this unauthenticated local admin server to the internet.
+
+The scheduled GitHub Actions pipeline collects public metadata, detects official-page hash changes, produces a reviewed-only report preview, and uploads a manual-review artifact. It intentionally does not commit automated judgements to `main`.
+
 ### Model capability map
 
 The capability map keeps two evidence layers separate: **local measurements** show only results truly run by this project, while **official information** is a linked capability profile for models not yet evaluated on the same task set. Public material never receives invented quality, latency, or cost scores.
 
-`data/models.json`, `data/model-evidence.json`, and `data/model-review.json` contain the model profiles, evidence records, and human-review queue. EvalScope (Apache-2.0) is the optional standard evaluation/performance backend; Promptfoo (MIT) is reserved for a future Agent/RAG regression layer. Neither project source nor UI is copied into this repository.
+`data/models.json`, `data/model-evidence.json`, and the local review database contain the model profiles, evidence records, and human-review queue. EvalScope (Apache-2.0) is an optional standard evaluation/performance backend; Promptfoo (MIT) is configured as an optional regression layer. Neither project source nor UI is copied into this repository.
 
 The current human review queue is explicitly marked **pending**. Until factuality, completeness, citation correctness, and structured-output usability have been sampled by a reviewer, rule-based metrics are not presented as final human experience conclusions.
 
 ### Public-source workflow
 
 ```text
-Public RSS / Atom metadata
-  → data/inbox.json (needs review)
-  → human fact check and research judgement
-  → data/signals.json (displayed, reviewed signals)
+Public feeds and official-page changes
+  → ignored work/ inbox and page-change files
+  → SQLite ranking, human fact check, and research judgement
+  → data/signals.json (reviewed and redacted only)
+  → dated report, vendor timeline, and RSS
 ```
 
 Run the manual collector with:

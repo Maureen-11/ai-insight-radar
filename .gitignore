@@ -9,3 +9,12 @@ __pycache__/
 *.py[cod]
 .env
 work/eval-runs/
+work/inbox.json
+work/collection-report.json
+work/page-snapshots.json
+work/page-changes.json
+work/research.db*
+work/promptfoo/
+.venv/
+data/inbox.json
+data/collection-report.json
