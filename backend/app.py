@@ -14,7 +14,7 @@ from .store import DATA, ROOT, ResearchStore
 from scripts.generate_publication import generate as generate_publication
 
 store = ResearchStore()
-app = FastAPI(title="AI Insight Radar Research API", version="0.8.0")
+app = FastAPI(title="AI Insight Radar Research API", version="1.0.0")
 STATIC = Path(__file__).parent / "static"
 app.mount("/admin-assets", StaticFiles(directory=STATIC), name="admin-assets")
 
@@ -43,6 +43,19 @@ class ReviewUpdate(BaseModel):
     entities: list[str] | None = None
     priority: str | None = None
     confidence: float | None = Field(default=None, ge=0, le=1)
+    research_question: str | None = None
+    executive_summary: str | None = None
+    observations: list[dict[str, Any]] | None = None
+    analysis: list[dict[str, Any]] | None = None
+    counter_evidence: list[dict[str, Any]] | None = None
+    limitations: list[str] | None = None
+    decision_impact: list[dict[str, Any]] | None = None
+    recommended_actions: list[dict[str, Any]] | None = None
+    evidence: list[dict[str, Any]] | None = None
+    confidence_detail: dict[str, Any] | None = None
+    ai_drafted: bool | None = None
+    human_reviewed: bool | None = None
+    review_version: str | None = None
 
 
 class EvalReviewUpdate(BaseModel):
@@ -121,6 +134,20 @@ def publish_review_item(item_id: str) -> dict[str, Any]:
 @app.post("/api/export")
 def export_public() -> dict[str, Any]:
     return export_all()
+
+
+@app.get("/api/auto-brief")
+def auto_brief() -> dict[str, Any]:
+    path = DATA / "auto-brief.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"status": "missing", "items": []}
+
+
+@app.post("/api/auto-brief/items/{item_id}/promote")
+def promote_auto_brief(item_id: str) -> dict[str, Any]:
+    try:
+        return store.promote_auto_brief(item_id)
+    except KeyError:
+        raise HTTPException(404, "automatic brief item not found")
 
 
 @app.get("/api/page-changes")

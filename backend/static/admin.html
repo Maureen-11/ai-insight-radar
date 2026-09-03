@@ -13,7 +13,7 @@
   </header>
   <main>
     <section class="summary" id="summary"></section>
-    <nav class="tabs"><button class="active" data-tab="signals">情报复核</button><button data-tab="evals">模型抽检</button></nav>
+    <nav class="tabs"><button class="active" data-tab="signals">深度报告复核</button><button data-tab="auto">自动信号</button><button data-tab="evals">模型抽检</button></nav>
     <section id="signals-tab" class="workspace">
       <aside class="queue">
         <div class="filters">
@@ -24,6 +24,10 @@
       </aside>
       <article class="editor empty" id="editor">从左侧选择一条情报开始复核。</article>
     </section>
+    <section id="auto-tab" class="evals hidden">
+      <div class="notice">自动简报只能升级为研究草稿；补齐多来源证据并完成人工确认前不能发布。</div>
+      <div id="auto-list"></div>
+    </section>
     <section id="evals-tab" class="evals hidden">
       <div class="notice">这里显示真实运行的回答摘录。评分必须由复核者填写，系统不会自动冒充人工结论。</div>
       <div id="eval-list"></div>
@@ -33,4 +37,3 @@
   <script src="/admin-assets/admin.js"></script>
 </body>
 </html>
-

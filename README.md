@@ -8,7 +8,23 @@
 
 ## 中文说明
 
-面向面试展示、也可实际操作的「AI 行业情报与模型评测平台」。它的重点不是堆新闻，而是清楚展示一条研究判断如何从公开信号进入人工复核，并落到可执行行动。公开端仍是无密钥静态网站；审核后台只在本机运行。
+面向面试展示、也可实际操作的「AI 行业情报与模型评测平台」。它的重点不是堆新闻，而是展示一条判断如何由公开信号、具体证据和适用边界形成，并经人工确认落到可验证行动。公开端仍是无密钥静态网站；审核后台只在本机运行。
+
+## v1.0：三层内容与证据标准
+
+```text
+每日公开来源采集
+  → AI 待复核信号（选题线索，不是研究结论）
+  → 深度研究草稿（事实、推理、反例、局限、行动）
+  → 项目负责人人工确认
+  → 正式研究档案与策略周报
+```
+
+- **待复核信号**：由自动管线生成，固定保留 `humanReviewed: false`，只能作为研究入口。
+- **深度研究报告**：每篇 600–1000 个中文字符，至少两个具体来源且至少一个一手来源；事实通过 `[E1]` 等编号映射到证据。
+- **正式策略周报**：只汇总已完成人工确认的深度报告。自动周报与正式周报状态分开。
+
+当前五篇 v1.0 报告覆盖三篇模型评测/产品体验研究和两篇市场/竞品研究。重写后的草稿已撤销旧版“已复核”状态；只有在项目负责人逐条核对来源、推理、反例和限制后，才允许恢复公开发布。
 
 ## 运行
 
@@ -61,26 +77,35 @@ python -m venv .venv
   → 周报 / 厂商时间线 / feed.xml
 ```
 
-`data/signals.json` 是展示层的数据契约。每个 `Signal` 至少包含：
+`data/signals.json` 使用 v1.0 深度报告契约，可保存待确认草稿；公开首页、正式周报和 RSS 只渲染其中同时满足 `reviewed: true` 与 `review.humanReviewed: true` 的记录。核心字段包括：
 
 ```json
 {
   "id": "signal-001",
-  "category": "模型",
+  "schemaVersion": "1.0.0",
+  "track": "模型评测与产品体验",
   "title": "可追溯的标题",
+  "researchQuestion": "本报告要回答的问题",
+  "executiveSummary": "首页使用的简短判断",
   "conclusion": "研究结论",
   "whyNow": "为什么现在重要",
+  "observations": [{"id": "O1", "text": "来源直接支持的事实", "evidenceIds": ["E1"]}],
+  "analysis": [{"id": "A1", "text": "本项目的比较与推理", "evidenceIds": ["E1", "E2"]}],
+  "counterEvidence": [{"id": "C1", "text": "反例或削弱结论的证据", "evidenceIds": ["E2"]}],
+  "limitations": ["适用范围和数据缺口"],
+  "decisionImpact": [{"audience": "产品", "impact": "对决策的影响"}],
+  "recommendedActions": [{"action": "验证动作", "ownerRole": "负责人角色", "metric": "指标", "expectedOutcome": "预期结果"}],
   "impact": ["具体影响"],
   "action": ["下一步行动"],
-  "entities": ["相关实体"],
   "source": {"name": "来源", "url": "https://example.com", "publishedAt": "YYYY-MM-DD", "type": "厂商官方"},
-  "evidence": [{"label": "证据", "url": "https://example.com", "note": "必要短说明"}],
-  "confidence": 0.78,
-  "priority": "high",
-  "status": "待验证",
-  "reviewed": true
+  "evidence": [{"id": "E1", "title": "具体文档标题", "url": "https://example.com/doc", "publishedAt": "YYYY-MM-DD", "accessedAt": "YYYY-MM-DD", "sourceType": "厂商官方", "verified": true}],
+  "confidence": {"overall": 0.78, "sourceQuality": 0.85, "evidenceAgreement": 0.75, "scopeFitness": 0.65, "rationale": "评分理由"},
+  "reviewed": false,
+  "review": {"aiDrafted": true, "humanReviewed": false, "reviewedAt": null, "version": "1.0-draft"}
 }
 ```
+
+发布门禁会检查正文深度、证据数量、一手来源、日期、链接、事实—证据映射、置信度理由和人工确认。任何一项缺失都不能进入正式档案。
 
 ## 采集公开来源
 
@@ -102,9 +127,9 @@ python scripts/generate_publication.py
 
 `.github/workflows/research-pipeline.yml` 每天北京时间 08:00 运行，也可手动触发。待审核原始材料保存为 30 天有效的 Actions Artifact；只有经过字段校验的公开安全汇总会由机器人提交到 `main`。
 
-## v0.9 每日 AI 自动简报
+## v0.9 每日 AI 待复核信号
 
-首页采用双轨展示：`data/auto-brief.json` 是 DeepSeek 自动生成、未经人工复核的每日动态；`data/signals.json` 继续只保存人工已复核的研究档案。两类内容不会共享状态标签。
+首页采用分层展示：`data/auto-brief.json` 是 DeepSeek 自动整理、未经人工复核的每日信号；它可以公开显示为选题线索，但不能进入人工研究档案或正式周报。`data/signals.json` 可包含带明确状态的草稿，但只有完成人工确认的报告才会被正式档案、周报和 RSS 渲染。
 
 定时任务每天北京时间 08:00 采集 RSS、Atom 和官方页面变化，按日期去重后最多分析 10 条；每日预算硬上限为 ¥1。输出使用严格 JSON 契约，来源名称、URL 和发布日期始终由采集器写入，模型不能改写证据字段。原始文章、API 原始响应和模型思考过程都不会提交。
 
@@ -195,16 +220,22 @@ node --check signal-detail.js
 
 ### What this is
 
-AI Insight Radar is an interview-ready AI market-intelligence and model-evaluation workbench. GitHub Pages clearly separates an automatically generated, unreviewed daily brief from reviewed research records; a local FastAPI/SQLite desk handles private work-in-progress.
+AI Insight Radar is an evidence-driven AI market-intelligence and model-evaluation workbench. GitHub Pages separates automated candidate signals, deep research drafts, and human-confirmed reports; a local FastAPI/SQLite desk handles work in progress.
+
+### v1.0 research standard
+
+The publication flow is: public source → AI-generated candidate signal → deep research draft → project-owner verification → formal report and weekly strategy brief. Candidate signals never inherit a reviewed status. A deep report must contain 600–1,000 Chinese characters, at least two concrete sources including one first-party source, claim-to-evidence IDs, counterevidence, limitations, decision impact, testable actions, and an explainable confidence breakdown.
+
+The five retained report IDs (`signal-001` through `signal-005`) are currently v1.0 drafts: three cover model evaluation/product experience and two cover market/competitive research. Their former reviewed flags were removed pending a fresh human source and reasoning check.
 
 ### Read this project in English
 
 Start here:
 
-1. **Daily AI brief** — up to ten automatically generated items with source dates and links, always labelled as not human-reviewed.
-2. **Signal stream** — each reviewed signal states a conclusion, its concrete impact, the recommended next action, and the source link.
-3. **Signal detail** — open `signal.html?id=signal-001` to see why it matters now, evidence, open questions, confidence, priority, and review status.
-4. **Weekly report** — separates a seven-day automated observation from reviewed research judgements.
+1. **Candidate signal feed** — up to ten automatically generated items with source dates and links, always labelled as unreviewed research leads.
+2. **Research archive** — only human-confirmed reports appear here, with evidence, impact, actions, and explicit boundaries.
+3. **Report detail** — open `signal.html?id=signal-001` to inspect confirmed facts, evidence mapping, analysis, counterevidence, limitations, confidence rationale, and review status.
+4. **Weekly report** — the formal section cites only human-confirmed deep reports; the automated seven-day observation remains separate.
 5. **Model evaluation** — a clearly labelled local comparison of quality, latency, and cost on the same scenario. It is not an official benchmark result.
 6. **Capability map** — filter domestic/overseas profiles and keep locally measured evidence separate from linked official information.
 7. **Local review desk** — rank, edit, approve, return, or ignore incoming public signals before exporting them.
@@ -262,9 +293,10 @@ The current 15-sample evaluation records AI initial scoring and project-owner co
 
 ```text
 Public feeds and official-page changes
-  → AI daily brief (automated, explicitly unreviewed)
-  → SQLite ranking and human fact check (separate path)
-  → data/signals.json (reviewed and redacted research records)
+  → AI candidate signals (automated, explicitly unreviewed)
+  → deep research draft in the local desk
+  → source, reasoning, counterevidence, and limitation check by the project owner
+  → formal reviewed archive and weekly report
 ```
 
 Run the manual collector with:

@@ -1,95 +1,10 @@
 {
-  "schemaVersion": "0.8.0",
-  "generatedAt": "2026-09-03T09:02:44.145561Z",
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-09-03T14:53:31.376449Z",
   "title": "AI 行业策略周报",
   "reviewedOnly": true,
-  "judgements": [
-    {
-      "signalId": "signal-004",
-      "conclusion": "通用 benchmark 只能做筛选门槛；最终排序必须由贴近业务的评测集决定。",
-      "whyNow": "相同模型在知识库问答、长文总结和结构化抽取中常有不同失效模式。",
-      "impact": [
-        "影响模型上线前的验收流程",
-        "低分样本需要进入产品和提示词迭代"
-      ],
-      "source": {
-        "name": "OpenCompass",
-        "url": "https://github.com/open-compass/opencompass",
-        "publishedAt": "2026-08-21",
-        "type": "开源项目"
-      }
-    },
-    {
-      "signalId": "signal-001",
-      "conclusion": "采购判断应同时比较任务质量、延迟、上下文适配度与单题成本，而不是单看参数或公开榜单。",
-      "whyNow": "厂商持续更新模型、价格和上下文能力，单一规格已无法支持业务选型。",
-      "impact": [
-        "影响模型采购评估表",
-        "需要把业务成功率纳入场景评测"
-      ],
-      "source": {
-        "name": "OpenAI Newsroom",
-        "url": "https://openai.com/news/",
-        "publishedAt": "2026-08-24",
-        "type": "厂商官方"
-      }
-    },
-    {
-      "signalId": "signal-002",
-      "conclusion": "长文档能力不能只看可输入长度；引用完整度、可追溯性和错误定位能力才决定能否进入知识工作流。",
-      "whyNow": "长上下文已成为常见规格，企业更需要证明答案来自哪些材料。",
-      "impact": [
-        "影响企业知识库问答的验收标准",
-        "影响产品内的证据展示与人工复核体验"
-      ],
-      "source": {
-        "name": "Hugging Face Blog",
-        "url": "https://huggingface.co/blog",
-        "publishedAt": "2026-08-23",
-        "type": "社区 / 研究"
-      }
-    },
-    {
-      "signalId": "signal-003",
-      "conclusion": "开源选型的价值不止是成本，还在于可控部署、模型路由和可观测治理能否形成完整交付链。",
-      "whyNow": "模型能力逐步商品化后，部署和治理工具成为落地门槛。",
-      "impact": [
-        "影响私有化部署方案的优先级",
-        "需要评估模型路由与审计能力"
-      ],
-      "source": {
-        "name": "ModelScope EvalScope",
-        "url": "https://github.com/modelscope/evalscope",
-        "publishedAt": "2026-08-22",
-        "type": "开源项目"
-      }
-    },
-    {
-      "signalId": "signal-005",
-      "conclusion": "能嵌入现有流程、展示证据并在失败时可降级的产品，更可能形成可持续的企业价值。",
-      "whyNow": "企业应用从试用走向协作和交付，权限、成本与责任边界变得可见。",
-      "impact": [
-        "影响产品路线图和集成优先级",
-        "影响采购方对权限与可审计性的要求"
-      ],
-      "source": {
-        "name": "Google AI Blog",
-        "url": "https://blog.google/technology/ai/",
-        "publishedAt": "2026-08-20",
-        "type": "厂商官方"
-      }
-    }
-  ],
-  "nextActions": [
-    "按场景建立最小可重复评测集",
-    "记录拒答、幻觉和格式错误三类异常",
-    "补充 10 条真实业务问题",
-    "记录各模型的单题成本与失败样本",
-    "把引用准确率单列为评测指标",
-    "保留无引用或错引的样本用于复盘",
-    "选择一个开源模型跑通本地评测",
-    "补齐权限、日志与故障降级检查项"
-  ],
+  "judgements": [],
+  "nextActions": [],
   "modelEvaluation": {
     "status": "completed",
     "sampleCount": 15,

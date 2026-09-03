@@ -1,199 +1,254 @@
 [
   {
     "id": "signal-001",
+    "schemaVersion": "1.0.0",
+    "track": "模型评测与产品体验",
     "category": "模型",
-    "title": "模型 API 的比较维度正在转向单位任务成本",
-    "conclusion": "采购判断应同时比较任务质量、延迟、上下文适配度与单题成本，而不是单看参数或公开榜单。",
-    "whyNow": "厂商持续更新模型、价格和上下文能力，单一规格已无法支持业务选型。",
-    "impact": [
-      "影响模型采购评估表",
-      "需要把业务成功率纳入场景评测"
+    "title": "模型选型为什么必须比较单位任务成本",
+    "researchQuestion": "企业采购模型 API 时，怎样把质量、延迟、失败重试和价格合成可执行的选型依据？",
+    "executiveSummary": "模型标价只能解释 token 单价，不能代表完成一次业务任务的真实成本；应在同一题集、同一运行边界下比较任务成功率、端到端延迟、重试率与单题成本。",
+    "conclusion": "模型选型应以“完成一个合格业务任务所需的总成本”为核心，而不是按参数、标称上下文或每百万 token 价格直接排序。",
+    "whyNow": "厂商同时按模型、输入输出、缓存和时段制定价格，模型能力与推理配置也在快速变化；脱离真实任务的静态价格表越来越难支持采购判断。",
+    "observations": [
+      {"id":"O1","text":"DeepSeek 官方定价按模型、输入缓存命中/未命中、输出 token 以及峰谷时段分别计费，并明确价格可能调整。","evidenceIds":["E1"]},
+      {"id":"O2","text":"OpenAI 的模型目录同时呈现能力定位、上下文、最大输出和输入输出价格，说明厂商本身也将能力与成本作为组合维度。","evidenceIds":["E2"]},
+      {"id":"O3","text":"本项目在同一套 30 道合成题上运行三组 DeepSeek 配置，记录到不同的 P50/P95 延迟和实际成本；但随后 15 条人工确认样本没有显示明确的体验胜者。","evidenceIds":["E3","E4"]}
     ],
-    "action": [
-      "补充 10 条真实业务问题",
-      "记录各模型的单题成本与失败样本"
+    "analysis": [
+      {"text":"价格页回答的是“一个 token 多少钱”，业务评测回答的是“为了得到可接受结果要调用多少次、等待多久”。如果一次便宜调用因格式错误或遗漏条件而需要重试，真实单题成本会高于标价推断。","evidenceIds":["E1","E3"]},
+      {"text":"本项目自动指标曾给三组配置不同分数，但人工复核发现三组在抽样题上的问题分布接近。这表明自动总分可以做筛查，却不能直接替代体验判断；选型表必须同时保留失败样本和人工解释。","evidenceIds":["E3","E4"]},
+      {"text":"因此更稳妥的采购单位不是“百万 token”，而是“一个满足事实、格式、引用和时延要求的任务”。该口径能够把价格变化映射到真实流程，也能解释为什么更贵模型未必在简单任务上更经济。","evidenceIds":["E1","E2","E3","E4"]}
     ],
-    "entities": [
-      "OpenAI",
-      "Anthropic"
+    "counterEvidence": [
+      {"text":"在超大规模、任务高度一致且质量已经达标的批处理场景中，token 单价仍可能是主要成本变量。","evidenceIds":["E1"]},
+      {"text":"本项目只实测了 DeepSeek 三种配置，不能据此推断 OpenAI、Anthropic 或其他厂商的相对表现。","evidenceIds":["E3"]}
     ],
-    "source": {
-      "name": "OpenAI Newsroom",
-      "url": "https://openai.com/news/",
-      "publishedAt": "2026-08-24",
-      "type": "厂商官方"
-    },
+    "limitations": ["题集为公开合成业务题，不代表某家公司的真实流量分布。","人工层只覆盖 15 条分层样本，尚不是多人盲评。","不同厂商资料的价格更新时间与计费单位可能变化，正式采购前必须重新核价。"],
+    "decisionImpact": [
+      {"area":"采购","impact":"将报价比较改为场景级任务成本，并把失败重试计入总成本。"},
+      {"area":"评测","impact":"自动指标与人工体验评分分栏，禁止用单一总分决定上线。"},
+      {"area":"产品","impact":"针对高失败率任务增加结构校验、回退和人工接管。"}
+    ],
+    "recommendedActions": [
+      {"action":"为三个核心业务场景各补充 20 条代表性问题并记录一次通过率。","owner":"评测负责人","metric":"一次通过率、失败类型分布","expected":"形成可比较的任务质量基线"},
+      {"action":"在每次运行中统一记录 token、端到端延迟、重试次数和最终单题成本。","owner":"研发/数据","metric":"合格任务成本 P50/P95","expected":"价格变化可映射到业务预算"}
+    ],
+    "impact": ["影响模型采购评估表：从标价比较升级为合格任务成本。","影响评测流程：自动分数、人工体验和失败样本必须并列。"],
+    "action": ["扩充业务题并记录一次通过率。","统一记录重试后的单题成本与 P95 延迟。"],
+    "entities": ["DeepSeek","OpenAI","模型采购","任务成本"],
+    "source": {"name":"DeepSeek Models & Pricing","url":"https://api-docs.deepseek.com/quick_start/pricing/","publishedAt":"2026-09-03","type":"厂商官方动态文档"},
     "evidence": [
-      {
-        "label": "OpenAI Newsroom",
-        "url": "https://openai.com/news/",
-        "note": "公开产品与研究更新入口；仅保留标题、日期和链接。"
-      }
+      {"id":"E1","title":"Models & Pricing","sourceName":"DeepSeek API Docs","url":"https://api-docs.deepseek.com/quick_start/pricing/","publishedAt":"持续更新","accessedAt":"2026-09-03","sourceType":"厂商官方动态文档","evidenceRole":"支持","supports":["O1"],"note":"核对计费维度、模型配置和价格可变性；正式采购前需重新访问。","verified":true},
+      {"id":"E2","title":"Models | OpenAI API","sourceName":"OpenAI Developer Docs","url":"https://developers.openai.com/api/docs/models","publishedAt":"持续更新","accessedAt":"2026-09-03","sourceType":"厂商官方动态文档","evidenceRole":"背景对照","supports":["O2"],"note":"用于核对模型定位、上下文、最大输出及价格维度，不作为跨厂商效果成绩。","verified":true},
+      {"id":"E3","title":"AI Insight Radar DeepSeek evaluation run","sourceName":"本项目实测","url":"data/eval-results.json","publishedAt":"2026-08-24","accessedAt":"2026-09-03","sourceType":"本项目实测","evidenceRole":"支持","supports":["O3"],"note":"30 题、三组配置的质量信号、延迟、成本和失败率汇总。","verified":true},
+      {"id":"E4","title":"DeepSeek 人机双重评估汇总","sourceName":"本项目人工确认","url":"data/eval-dual-review-summary.json","publishedAt":"2026-09-03","accessedAt":"2026-09-03","sourceType":"本项目人工确认","evidenceRole":"限制与校准","supports":["O3"],"note":"15 条样本的 AI 初评与项目负责人确认结果；不是多人盲评。","verified":true}
     ],
-    "questions": [
-      "业务题的质量权重应如何与成本权重平衡？"
-    ],
-    "confidence": 0.78,
+    "questions": ["真实业务流量中，格式失败与重试会把不同模型的单位任务成本拉开多少？","当质量差距不显著时，采购方愿意为更低的 P95 延迟支付多少溢价？"],
+    "confidence": {"overall":0.82,"sourceQuality":0.9,"evidenceAgreement":0.84,"scopeFitness":0.72,"rationale":"价格和本地运行记录可直接核验；任务成本框架得到多类证据支持，但跨厂商效果与真实企业流量尚未实测。"},
     "priority": "high",
-    "status": "已复核",
-    "reviewed": true
+    "status": "待人工确认",
+    "reviewed": false,
+    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
   },
   {
     "id": "signal-002",
+    "schemaVersion": "1.0.0",
+    "track": "模型评测与产品体验",
     "category": "产品",
-    "title": "长上下文的体验差异，越来越取决于检索与引用链",
-    "conclusion": "长文档能力不能只看可输入长度；引用完整度、可追溯性和错误定位能力才决定能否进入知识工作流。",
-    "whyNow": "长上下文已成为常见规格，企业更需要证明答案来自哪些材料。",
-    "impact": [
-      "影响企业知识库问答的验收标准",
-      "影响产品内的证据展示与人工复核体验"
+    "title": "长上下文为什么不等于可靠的知识工作流",
+    "researchQuestion": "当模型已经支持很长输入时，哪些指标才能判断它能否可靠进入企业知识库问答？",
+    "executiveSummary": "上下文窗口只说明允许输入的容量，不证明模型能稳定找到、组合并引用正确证据；企业验收应覆盖检索位置、跨段推理、引用正确性和错误定位。",
+    "conclusion": "长上下文是知识工作流的容量条件，不是可靠性结论；是否可上线取决于检索召回、引用正确、跨文档推理和失败可定位性。",
+    "whyNow": "百万级上下文正在成为厂商规格，但企业真正承担的是错引、漏引和无法追溯造成的决策风险。",
+    "observations": [
+      {"id":"O1","text":"Anthropic 的公开长上下文实验比较了提示方法，报告抽取相关原文后再回答能改善召回，同时也观察到信息位置会影响部分模型表现。","evidenceIds":["E1"]},
+      {"id":"O2","text":"OpenCompass NeedleBench 将长文能力拆成单信息检索、多信息检索、多信息推理和层级追踪，并允许在多个上下文长度上运行。","evidenceIds":["E2"]},
+      {"id":"O3","text":"本项目 DeepSeek 运行中，三组配置的引用命中率为 73.3%–80%，结构化 JSON 合法率为 3.3%–33.3%；说明能读入材料与能稳定交付可用结果不是同一件事。","evidenceIds":["E3"]}
     ],
-    "action": [
-      "把引用准确率单列为评测指标",
-      "保留无引用或错引的样本用于复盘"
+    "analysis": [
+      {"text":"“可输入多少”衡量容量，“能否找到正确证据”衡量检索，“能否组合多处信息”衡量推理，“能否指出答案来自哪里”衡量可追溯性。把四者合并成一个上下文长度标签，会掩盖知识库产品最常见的失效点。","evidenceIds":["E1","E2"]},
+      {"text":"企业知识问答还多了一层交付约束：答案常要进入表格、工单或审批。如果引用正确但结构无法解析，产品仍需要人工返工；反之，格式合法也不能证明事实正确。","evidenceIds":["E3"]},
+      {"text":"因此验收集应改变信息位置、文档数量和干扰材料，并分别统计召回、引用、跨段推理与格式可用性。只有失败能被定位，团队才能判断应改检索、提示词、模型还是交互。","evidenceIds":["E1","E2","E3"]}
     ],
-    "entities": [
-      "Hugging Face",
-      "RAG",
-      "Long Context"
+    "counterEvidence": [
+      {"text":"对于单文档、答案位置固定、无需引用的简单摘要，扩大上下文窗口本身可能已经显著降低切片成本。","evidenceIds":["E1"]},
+      {"text":"NeedleBench 偏向人工插入或构造的检索任务，不能替代真实企业文档中的表格、冲突版本和权限约束。","evidenceIds":["E2"]}
     ],
-    "source": {
-      "name": "Hugging Face Blog",
-      "url": "https://huggingface.co/blog",
-      "publishedAt": "2026-08-23",
-      "type": "社区 / 研究"
-    },
+    "limitations": ["Anthropic 实验来自较早模型，结论用于说明评测维度，不代表当前模型排名。","本项目题集规模小，且没有覆盖扫描 PDF、复杂表格和权限过滤。","引用命中率仅检查预期编号是否出现，仍需人工判断引用是否真正支持答案。"],
+    "decisionImpact": [
+      {"area":"产品验收","impact":"把引用和错误定位纳入上线门槛，而不是只验最大输入长度。"},
+      {"area":"交互设计","impact":"答案旁展示证据片段、文档版本和无法确认状态。"},
+      {"area":"评测设计","impact":"按信息位置、文档数量和推理类型分层统计。"}
+    ],
+    "recommendedActions": [
+      {"action":"建立 4×3 长文测试矩阵：四类任务、三个上下文长度。","owner":"评测负责人","metric":"召回率、引用正确率、跨段推理成功率","expected":"定位能力随长度变化的拐点"},
+      {"action":"把无引用、错引和引用不支持结论拆成三个 Badcase。","owner":"产品/评测","metric":"三类错误占比及人工处理时长","expected":"明确检索和生成模块的责任边界"}
+    ],
+    "impact": ["影响知识库验收：上下文长度不能替代引用与推理测试。","影响产品体验：需要展示证据、版本与失败状态。"],
+    "action": ["建立分层长文测试矩阵。","拆分无引用、错引和证据不支持三类问题。"],
+    "entities": ["Anthropic","OpenCompass","NeedleBench","RAG","Long Context"],
+    "source": {"name":"Anthropic long-context experiment","url":"https://www.anthropic.com/news/prompting-long-context","publishedAt":"2023-09-23","type":"厂商公开实验"},
     "evidence": [
-      {
-        "label": "Hugging Face Blog",
-        "url": "https://huggingface.co/blog",
-        "note": "公开模型、数据集和生态动态入口。"
-      }
+      {"id":"E1","title":"Prompt engineering for Claude's long context window","sourceName":"Anthropic","url":"https://www.anthropic.com/news/prompting-long-context","publishedAt":"2023-09-23","accessedAt":"2026-09-03","sourceType":"厂商公开实验","evidenceRole":"支持与限制","supports":["O1"],"note":"用于说明提示方法和信息位置会影响长文召回；不作为当前模型排名。","verified":true},
+      {"id":"E2","title":"Needle In A Haystack Evaluation","sourceName":"OpenCompass","url":"https://github.com/open-compass/opencompass/blob/main/docs/en/advanced_guides/needleinahaystack_eval.md","publishedAt":"持续更新","accessedAt":"2026-09-03","sourceType":"开源评测文档","evidenceRole":"方法支持","supports":["O2"],"note":"核对单/多信息检索、多信息推理和不同上下文长度的测试设计。","verified":true},
+      {"id":"E3","title":"AI Insight Radar DeepSeek evaluation run","sourceName":"本项目实测","url":"data/eval-results.json","publishedAt":"2026-08-24","accessedAt":"2026-09-03","sourceType":"本项目实测","evidenceRole":"本地验证","supports":["O3"],"note":"同题集三组配置的引用命中与 JSON 合法率；不外推到其他模型。","verified":true}
     ],
-    "questions": [
-      "现有知识库的引用缺失率和错误引用率是多少？"
-    ],
-    "confidence": 0.74,
+    "questions": ["真实企业文档中，引用错误主要来自检索遗漏还是生成阶段错配？","增加证据展示后，用户发现错误和完成人工复核的时间能缩短多少？"],
+    "confidence": {"overall":0.84,"sourceQuality":0.88,"evidenceAgreement":0.9,"scopeFitness":0.74,"rationale":"方法证据和本地失效样本方向一致；但企业真实文档、复杂表格与当前跨厂商模型尚未覆盖。"},
     "priority": "high",
-    "status": "已复核",
-    "reviewed": true
+    "status": "待人工确认",
+    "reviewed": false,
+    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
   },
   {
     "id": "signal-003",
-    "category": "生态",
-    "title": "开源模型竞争正在延伸到部署、路由与可观测性",
-    "conclusion": "开源选型的价值不止是成本，还在于可控部署、模型路由和可观测治理能否形成完整交付链。",
-    "whyNow": "模型能力逐步商品化后，部署和治理工具成为落地门槛。",
-    "impact": [
-      "影响私有化部署方案的优先级",
-      "需要评估模型路由与审计能力"
+    "schemaVersion": "1.0.0",
+    "track": "模型评测与产品体验",
+    "category": "模型",
+    "title": "AI 初评与人工确认如何形成模型评测闭环",
+    "researchQuestion": "自动指标和人工体验判断怎样分工，才能既提高评测规模，又避免机器评分自证正确？",
+    "executiveSummary": "自动评分适合批量检查关键词、引用与结构规则，人工确认负责事实支持、完整性和真实可用性；两层结果必须分别保存，并把分歧样本送回下一轮题集和断言。",
+    "conclusion": "可信的模型评测不是“AI 打一个总分”，而是自动筛查、人工确认、Badcase 归因和同题复测组成的版本化闭环。",
+    "whyNow": "模型和 Prompt 更新频繁，仅靠人工全量检查难以扩展，仅靠模型裁判又可能放大评分偏差；团队需要清楚知道哪一层证据回答什么问题。",
+    "observations": [
+      {"id":"O1","text":"本项目对 15 条分层样本分别保存 AI 规则初评和项目负责人人工确认；三组配置的平均绝对分差均为 0.6，四维完全一致率均为 20%。","evidenceIds":["E1"]},
+      {"id":"O2","text":"人工确认把主要问题归为总结不完整、条件/单位遗漏、条件遗漏和字段映射错误；三组配置在该抽样中未显示明显体验差异。","evidenceIds":["E1"]},
+      {"id":"O3","text":"EvalScope 服务文档把模型评测与性能测试拆成独立接口，并支持 OpenAI 兼容 API；其发布记录还专门修复过指标身份、缺失主指标和性能精度问题。","evidenceIds":["E2","E3"]}
     ],
-    "action": [
-      "选择一个开源模型跑通本地评测",
-      "补齐权限、日志与故障降级检查项"
+    "analysis": [
+      {"text":"20% 完全一致率不是说 AI 初评毫无价值，而是说明规则初评更擅长确定性检查，却容易高估摘要覆盖和结构可用性。分歧本身就是有价值的数据：它揭示哪些评分维度需要人工语义判断。","evidenceIds":["E1"]},
+      {"text":"评测平台能够扩大运行规模、统一配置并记录延迟，但工具不会自动解决评分口径。题集版本、Prompt 版本、模型配置、自动指标和人工结论必须一起保存，才能解释一次“提升”来自模型、提示还是评分规则变化。","evidenceIds":["E2","E3"]},
+      {"text":"闭环的终点不是排行榜，而是迭代记录：发现问题后修改 schema 约束、引用要求或交互回退，再在同一题集复测并比较 Badcase 是否下降。","evidenceIds":["E1","E2"]}
     ],
-    "entities": [
-      "ModelScope",
-      "EvalScope",
-      "OpenCompass"
+    "counterEvidence": [
+      {"text":"对于 JSON 语法、必填字段和精确引用编号等确定性要求，自动断言比人工更一致，也更适合全量运行。","evidenceIds":["E1","E2"]},
+      {"text":"当前人工确认来自单一项目负责人，不具备多评审一致性证据，主观体验维度仍可能受个人标准影响。","evidenceIds":["E1"]}
     ],
-    "source": {
-      "name": "ModelScope EvalScope",
-      "url": "https://github.com/modelscope/evalscope",
-      "publishedAt": "2026-08-22",
-      "type": "开源项目"
-    },
+    "limitations": ["15 条样本只覆盖三类合成任务，每组配置各 5 条。","人工确认不是盲评，也没有第二名评审者计算一致性。","自动质量分是规则加权信号，不是官方 benchmark 或用户满意度。"],
+    "decisionImpact": [
+      {"area":"评测流程","impact":"自动规则全量运行，人工复核分层抽样和所有高风险失败。"},
+      {"area":"产品迭代","impact":"Badcase 必须关联下一版 Prompt、schema 或交互改动。"},
+      {"area":"汇报","impact":"分开报告自动指标、人工评分和分歧，不宣传单一总分。"}
+    ],
+    "recommendedActions": [
+      {"action":"把 15 条分歧样本转成可执行断言，并保持原题复测。","owner":"评测/研发","metric":"Badcase 复现率与修复后通过率","expected":"形成第一条可展示的迭代曲线"},
+      {"action":"下一轮邀请第二名评审者盲评至少 15 条样本。","owner":"研究负责人","metric":"人工评分一致率","expected":"识别评分标准中仍含糊的维度"}
+    ],
+    "impact": ["影响评测可信度：必须分别公开自动信号和人工判断。","影响迭代效率：分歧和 Badcase 应进入下一版回归集。"],
+    "action": ["把现有 Badcase 转成回归断言。","下一轮增加第二名评审者并计算一致率。"],
+    "entities": ["DeepSeek","EvalScope","OpenCompass","AI Judge","Human Review"],
+    "source": {"name":"本项目双重评估汇总","url":"data/eval-dual-review-summary.json","publishedAt":"2026-09-03","type":"本项目人工确认"},
     "evidence": [
-      {
-        "label": "ModelScope EvalScope",
-        "url": "https://github.com/modelscope/evalscope",
-        "note": "公开评测工具文档与版本动态。"
-      }
+      {"id":"E1","title":"DeepSeek 人机双重评估汇总","sourceName":"本项目人工确认","url":"data/eval-dual-review-summary.json","publishedAt":"2026-09-03","accessedAt":"2026-09-03","sourceType":"本项目人工确认","evidenceRole":"核心证据","supports":["O1","O2"],"note":"公开 15 条样本的覆盖率、分差、一致率和 Badcase 分布，不公开原始回答。","verified":true},
+      {"id":"E2","title":"EvalScope Service Deployment","sourceName":"ModelScope EvalScope","url":"https://github.com/modelscope/evalscope/blob/main/docs/en/user_guides/service.md","publishedAt":"持续更新","accessedAt":"2026-09-03","sourceType":"开源评测文档","evidenceRole":"方法支持","supports":["O3"],"note":"核对模型评测、性能测试和 OpenAI 兼容 API 的服务接口。","verified":true},
+      {"id":"E3","title":"EvalScope v1.11.1","sourceName":"ModelScope EvalScope","url":"https://github.com/modelscope/evalscope/releases/tag/v1.11.1","publishedAt":"2026-08-31","accessedAt":"2026-09-03","sourceType":"开源项目 Release","evidenceRole":"工程证据","supports":["O3"],"note":"该版本记录指标身份、缺失指标呈现、性能精度和 API 契约等修复。","verified":true}
     ],
-    "questions": [
-      "哪些治理能力必须在试点前完成？"
-    ],
-    "confidence": 0.71,
-    "priority": "medium",
-    "status": "已复核",
-    "reviewed": true
+    "questions": ["增加第二名评审者后，完整性与结构可用性评分的一致率是多少？","把 Badcase 写成回归断言后，下一版 Prompt 是否真正减少同类错误？"],
+    "confidence": {"overall":0.9,"sourceQuality":0.94,"evidenceAgreement":0.92,"scopeFitness":0.84,"rationale":"核心数字来自本项目可追溯记录，方法与开源评测工程实践一致；局限是样本量小且只有一名人工确认者。"},
+    "priority": "high",
+    "status": "待人工确认",
+    "reviewed": false,
+    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
   },
   {
     "id": "signal-004",
-    "category": "模型",
-    "title": "通用评测和企业长尾问题可能给出不同的模型排序",
-    "conclusion": "通用 benchmark 只能做筛选门槛；最终排序必须由贴近业务的评测集决定。",
-    "whyNow": "相同模型在知识库问答、长文总结和结构化抽取中常有不同失效模式。",
-    "impact": [
-      "影响模型上线前的验收流程",
-      "低分样本需要进入产品和提示词迭代"
+    "schemaVersion": "1.0.0",
+    "track": "市场与竞品研究",
+    "category": "产品",
+    "title": "企业 Agent 竞争正在转向治理和执行能力",
+    "researchQuestion": "当多家产品都能调用工具时，企业 Agent 的差异化会落在哪些可验收能力上？",
+    "executiveSummary": "近期官方产品演进从单次工具调用扩展到托管沙箱、后台任务、远程连接、凭据更新和人工监控；竞争焦点因此从“会不会调用工具”转向“能否长期、安全、可恢复地执行流程”。",
+    "conclusion": "企业 Agent 的产品门槛正在从模型回答质量扩展为执行基础设施与治理体验：状态管理、权限边界、凭据生命周期、人工接管和失败恢复共同决定可用性。",
+    "whyNow": "Agent 开始承担跨系统、长时间和有副作用的任务；一旦进入真实业务，执行失败、权限过宽和无法追踪会直接转化为运营风险。",
+    "observations": [
+      {"id":"O1","text":"Google 在 2026 年 5 月发布 Managed Agents，描述由单次 API 调用创建隔离的临时 Linux 环境，支持规划、工具调用、代码执行、文件处理和联网访问。","evidenceIds":["E1"]},
+      {"id":"O2","text":"Google 在 7 月继续增加后台异步执行、远程 MCP、自定义函数和跨交互凭据更新，并提供轮询、进度流和重新连接机制。","evidenceIds":["E2"]},
+      {"id":"O3","text":"Google Cloud Next 的平台描述同时强调构建、治理、扩展和集中监控 Agent，而不是只宣传底层模型能力。","evidenceIds":["E3"]}
     ],
-    "action": [
-      "按场景建立最小可重复评测集",
-      "记录拒答、幻觉和格式错误三类异常"
+    "analysis": [
+      {"text":"两次更新的顺序值得关注：第一阶段解决“Agent 在哪里执行、能做什么”，第二阶段处理“任务持续多久、如何接企业工具、凭据过期怎么办”。这说明产品复杂度正从推理层转移到执行生命周期。","evidenceIds":["E1","E2"]},
+      {"text":"对于采购方，可验收项应包括最小权限、网络白名单、工具审批、超时与重试、任务取消、进度可见、操作日志和人工接管。只展示成功 Demo 无法覆盖这些生产风险。","evidenceIds":["E1","E2","E3"]},
+      {"text":"竞争优势也不一定属于单个最强模型。能把模型、工具、数据和治理做成稳定工作流的平台，可能比只提供模型接口的产品更快进入日常业务。","evidenceIds":["E3"]}
     ],
-    "entities": [
-      "EvalScope",
-      "OpenCompass"
+    "counterEvidence": [
+      {"text":"这些材料主要来自 Google 官方产品公告，功能存在不等于客户已经获得可靠收益；部分能力仍可能处于预览阶段。","evidenceIds":["E1","E2"]},
+      {"text":"低风险、短任务的消费级 Agent 可能不需要完整企业治理栈，过重的审批反而会伤害体验。","evidenceIds":["E1"]}
     ],
-    "source": {
-      "name": "OpenCompass",
-      "url": "https://github.com/open-compass/opencompass",
-      "publishedAt": "2026-08-21",
-      "type": "开源项目"
-    },
+    "limitations": ["本报告用于识别产品竞争维度，不是 Google 与其他厂商的功能完备度排行榜。","未获得真实客户的失败率、人工接管率和总体拥有成本。","厂商公告属于一手产品主张，仍需通过实测和客户访谈验证。"],
+    "decisionImpact": [
+      {"area":"产品设计","impact":"路线图增加任务状态、权限、日志、暂停/取消与人工接管。"},
+      {"area":"竞品分析","impact":"从功能勾选升级为完整任务生命周期对比。"},
+      {"area":"采购验收","impact":"用异常场景演练验证恢复和责任边界。"}
+    ],
+    "recommendedActions": [
+      {"action":"建立 Agent 生命周期竞品矩阵，覆盖创建、执行、等待、异常、接管和审计。","owner":"产品/市场研究","metric":"每家产品可核验能力与未知项数量","expected":"形成可追溯的竞品差距图"},
+      {"action":"设计三种失败演练：凭据过期、工具超时和高风险操作审批。","owner":"产品/研发","metric":"恢复成功率、人工接管时间","expected":"把治理能力变成可验收体验"}
+    ],
+    "impact": ["影响 Agent 路线图：治理与恢复应成为核心功能。","影响竞品分析：比较单位从模型功能变为任务生命周期。"],
+    "action": ["建立 Agent 生命周期竞品矩阵。","用凭据过期、工具超时和审批失败做异常演练。"],
+    "entities": ["Google","Gemini API","Managed Agents","MCP","Agent Governance"],
+    "source": {"name":"Google Managed Agents","url":"https://blog.google/innovation-and-ai/technology/developers-tools/managed-agents-gemini-api/","publishedAt":"2026-05-19","type":"厂商官方公告"},
     "evidence": [
-      {
-        "label": "OpenCompass",
-        "url": "https://github.com/open-compass/opencompass",
-        "note": "公开评测框架与数据集说明入口。"
-      }
+      {"id":"E1","title":"Introducing Managed Agents in the Gemini API","sourceName":"Google","url":"https://blog.google/innovation-and-ai/technology/developers-tools/managed-agents-gemini-api/","publishedAt":"2026-05-19","accessedAt":"2026-09-03","sourceType":"厂商官方公告","evidenceRole":"支持","supports":["O1"],"note":"核对托管沙箱、工具、代码、文件和联网执行能力。","verified":true},
+      {"id":"E2","title":"Expanding Managed Agents in Gemini API: background tasks, remote MCP and more","sourceName":"Google","url":"https://blog.google/innovation-and-ai/technology/developers-tools/expanding-managed-agents-gemini-api/","publishedAt":"2026-07-07","accessedAt":"2026-09-03","sourceType":"厂商官方公告","evidenceRole":"支持","supports":["O2"],"note":"核对后台任务、远程 MCP、自定义函数、重连和凭据更新。","verified":true},
+      {"id":"E3","title":"7 highlights from Google Cloud Next ’26","sourceName":"Google Cloud","url":"https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/google-cloud-next-26-recap/","publishedAt":"2026-04-24","accessedAt":"2026-09-03","sourceType":"厂商官方公告","evidenceRole":"市场背景","supports":["O3"],"note":"核对企业 Agent 平台对构建、治理、扩展和监控的产品定位。","verified":true}
     ],
-    "questions": [
-      "业务评测集如何覆盖高频与长尾任务？"
-    ],
-    "confidence": 0.81,
+    "questions": ["不同平台在凭据过期和工具失败时的默认行为是什么？","客户真正愿意为集中治理支付费用，还是把它视为云平台基础能力？"],
+    "confidence": {"overall":0.78,"sourceQuality":0.9,"evidenceAgreement":0.86,"scopeFitness":0.62,"rationale":"官方产品演进清晰支持竞争维度变化，但证据集中于单一厂商，缺少跨厂商实测和客户结果。"},
     "priority": "high",
-    "status": "已复核",
-    "reviewed": true
+    "status": "待人工确认",
+    "reviewed": false,
+    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
   },
   {
     "id": "signal-005",
-    "category": "产品",
-    "title": "AI 产品竞争正在从聊天入口走向可审计的任务闭环",
-    "conclusion": "能嵌入现有流程、展示证据并在失败时可降级的产品，更可能形成可持续的企业价值。",
-    "whyNow": "企业应用从试用走向协作和交付，权限、成本与责任边界变得可见。",
-    "impact": [
-      "影响产品路线图和集成优先级",
-      "影响采购方对权限与可审计性的要求"
+    "schemaVersion": "1.0.0",
+    "track": "市场与竞品研究",
+    "category": "生态",
+    "title": "开源模型竞争为什么已扩展到部署与评测生态",
+    "researchQuestion": "为什么观察开源模型竞争时，不能只看权重发布和排行榜，还要跟踪推理与评测工具链？",
+    "executiveSummary": "近期 EvalScope、OpenCompass 和 vLLM 的版本变化集中在评测契约、指标正确性、性能测试、模型适配、缓存和推理优化；这说明开源竞争已覆盖从能力证明到稳定交付的完整工具链。",
+    "conclusion": "开源模型能否进入生产，不只由权重能力决定；评测可复现性、推理服务效率、硬件适配、观测与升级成本正在成为同等重要的竞争层。",
+    "whyNow": "模型版本和推理栈同步加速更新，企业即使选择同一权重，也可能因为服务框架、评测口径和升级路径不同获得完全不同的成本与稳定性。",
+    "observations": [
+      {"id":"O1","text":"EvalScope v1.11.1 增加和修复了多项 benchmark、API 契约、使用量统计、重试、性能精度及缺失指标呈现问题。","evidenceIds":["E1"]},
+      {"id":"O2","text":"OpenCompass 0.5.4 在 2026 年 8 月发布，持续维护标准化评测平台；其长文评测文档还展示了可配置数据集和 vLLM 部署模型的运行方式。","evidenceIds":["E2","E3"]},
+      {"id":"O3","text":"vLLM v0.28.0 的发布说明覆盖模型专项优化、推测解码、缓存分层、硬件适配和服务前端等大量推理工程变化。","evidenceIds":["E4"]}
     ],
-    "action": [
-      "梳理一个现有工作流的人工交接点",
-      "为关键输出增加证据链接与失败提示"
+    "analysis": [
+      {"text":"这三类项目分别解决“怎样测”“怎样组织公开基准”和“怎样高效服务模型”。它们的版本变化会影响分数是否可复现、延迟如何统计、模型能否部署以及升级是否破坏现有接口。","evidenceIds":["E1","E2","E3","E4"]},
+      {"text":"因此开源选型不能把 GitHub Star、某次榜单或模型参数作为终点。采购与研发需要锁定权重、推理框架、评测集和硬件环境的联合版本，才能解释成本与性能变化。","evidenceIds":["E1","E4"]},
+      {"text":"对行业研究而言，工具链 Release 比泛化新闻更接近落地信号：指标修复说明过去结果可能存在解释风险，服务优化则可能直接改变模型的单位任务成本。","evidenceIds":["E1","E4"]}
     ],
-    "entities": [
-      "Google",
-      "AI Workflow"
+    "counterEvidence": [
+      {"text":"活跃发布和大量工程特性不能证明某个模型在目标业务中效果更好，也不能替代安全与运维评估。","evidenceIds":["E1","E4"]},
+      {"text":"小规模原型可能优先使用托管 API，暂时不需要承担自部署工具链的复杂度。","evidenceIds":["E4"]}
     ],
-    "source": {
-      "name": "Google AI Blog",
-      "url": "https://blog.google/technology/ai/",
-      "publishedAt": "2026-08-20",
-      "type": "厂商官方"
-    },
+    "limitations": ["本报告比较的是生态角色和版本信号，不是三个项目之间的功能排行榜。","没有在同一硬件上安装并压测最新版本。","Release 说明由项目维护者提供，生产稳定性仍需本地验证。"],
+    "decisionImpact": [
+      {"area":"技术选型","impact":"模型、推理框架、评测集和硬件配置作为一个可复现组合管理。"},
+      {"area":"市场跟踪","impact":"把版本变更、破坏性升级和指标修复纳入竞品时间线。"},
+      {"area":"成本治理","impact":"评估自部署节省的调用费是否覆盖运维与升级成本。"}
+    ],
+    "recommendedActions": [
+      {"action":"建立模型栈版本清单，固定模型、服务框架、评测工具、硬件和配置哈希。","owner":"研发/评测","metric":"实验可复现率","expected":"不同时间的结果可解释、可回滚"},
+      {"action":"每月选择一个关键 Release 做兼容性与性能回归。","owner":"平台研发","metric":"破坏性变更数、P95 延迟、吞吐和错误率","expected":"把生态变化转成可量化的升级决策"}
+    ],
+    "impact": ["影响开源选型：模型权重与部署评测栈必须联合评估。","影响市场跟踪：Release 和指标修复比 Star 数更接近落地价值。"],
+    "action": ["建立完整模型栈版本清单。","按月选择关键 Release 做兼容性和性能回归。"],
+    "entities": ["ModelScope","EvalScope","OpenCompass","vLLM","开源模型生态"],
+    "source": {"name":"EvalScope v1.11.1","url":"https://github.com/modelscope/evalscope/releases/tag/v1.11.1","publishedAt":"2026-08-31","type":"开源项目 Release"},
     "evidence": [
-      {
-        "label": "Google AI Blog",
-        "url": "https://blog.google/technology/ai/",
-        "note": "公开 AI 产品和基础设施更新入口。"
-      }
+      {"id":"E1","title":"EvalScope v1.11.1","sourceName":"ModelScope EvalScope","url":"https://github.com/modelscope/evalscope/releases/tag/v1.11.1","publishedAt":"2026-08-31","accessedAt":"2026-09-03","sourceType":"开源项目 Release","evidenceRole":"支持","supports":["O1"],"note":"核对评测契约、指标、性能测试、重试与 benchmark 变化。","verified":true},
+      {"id":"E2","title":"OpenCompass 0.5.4","sourceName":"OpenCompass","url":"https://github.com/open-compass/opencompass/releases/tag/0.5.4","publishedAt":"2026-08-26","accessedAt":"2026-09-03","sourceType":"开源项目 Release","evidenceRole":"生态时间线","supports":["O2"],"note":"用于确认 OpenCompass 最新发布节点，不据此推断模型效果。","verified":true},
+      {"id":"E3","title":"Needle In A Haystack Evaluation","sourceName":"OpenCompass","url":"https://github.com/open-compass/opencompass/blob/main/docs/en/advanced_guides/needleinahaystack_eval.md","publishedAt":"持续更新","accessedAt":"2026-09-03","sourceType":"开源评测文档","evidenceRole":"方法支持","supports":["O2"],"note":"展示长上下文任务配置与对 vLLM 部署模型的评测方式。","verified":true},
+      {"id":"E4","title":"vLLM v0.28.0","sourceName":"vLLM","url":"https://github.com/vllm-project/vllm/releases/tag/v0.28.0","publishedAt":"2026-08-26","accessedAt":"2026-09-03","sourceType":"开源项目 Release","evidenceRole":"支持","supports":["O3"],"note":"核对推理优化、缓存、模型适配、硬件与服务工程变化。","verified":true}
     ],
-    "questions": [
-      "哪个流程最适合先验证人机协作闭环？"
-    ],
-    "confidence": 0.69,
+    "questions": ["最新推理框架在目标硬件上的真实收益是否覆盖升级与维护成本？","评测工具修复指标后，历史模型排序有多少结论需要重新解释？"],
+    "confidence": {"overall":0.8,"sourceQuality":0.88,"evidenceAgreement":0.86,"scopeFitness":0.66,"rationale":"三个活跃项目的具体 Release 支持工具链竞争判断；但尚未做同硬件安装压测，不能量化生产收益。"},
     "priority": "medium",
-    "status": "已复核",
-    "reviewed": true
+    "status": "待人工确认",
+    "reviewed": false,
+    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
   }
 ]

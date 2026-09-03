@@ -146,10 +146,17 @@ class ResearchStore:
                 """
                 CREATE TABLE IF NOT EXISTS review_items (
                   id TEXT PRIMARY KEY, source_id TEXT, source_name TEXT, source_type TEXT,
-                  category TEXT, entities_json TEXT NOT NULL DEFAULT '[]', title TEXT NOT NULL,
+                  category TEXT, track TEXT, entities_json TEXT NOT NULL DEFAULT '[]', title TEXT NOT NULL,
                   url TEXT NOT NULL UNIQUE, published_at TEXT, summary TEXT, status TEXT NOT NULL DEFAULT 'pending',
                   conclusion TEXT, why_now TEXT, impact_json TEXT NOT NULL DEFAULT '[]', action_json TEXT NOT NULL DEFAULT '[]',
                   questions_json TEXT NOT NULL DEFAULT '[]',
+                  research_question TEXT, executive_summary TEXT,
+                  observations_json TEXT NOT NULL DEFAULT '[]', analysis_json TEXT NOT NULL DEFAULT '[]',
+                  counter_evidence_json TEXT NOT NULL DEFAULT '[]', limitations_json TEXT NOT NULL DEFAULT '[]',
+                  decision_impact_json TEXT NOT NULL DEFAULT '[]', recommended_actions_json TEXT NOT NULL DEFAULT '[]',
+                  evidence_json TEXT NOT NULL DEFAULT '[]', confidence_json TEXT NOT NULL DEFAULT '{}',
+                  ai_drafted INTEGER NOT NULL DEFAULT 0, human_reviewed INTEGER NOT NULL DEFAULT 0,
+                  review_version TEXT, human_reviewed_at TEXT,
                   priority TEXT NOT NULL DEFAULT 'medium', confidence REAL NOT NULL DEFAULT 0.5,
                   reviewed INTEGER NOT NULL DEFAULT 0, research_score REAL NOT NULL DEFAULT 0,
                   score_reasons_json TEXT NOT NULL DEFAULT '[]', normalized_title TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
@@ -178,6 +185,19 @@ class ResearchStore:
             columns = {row["name"] for row in db.execute("PRAGMA table_info(review_items)")}
             if "questions_json" not in columns:
                 db.execute("ALTER TABLE review_items ADD COLUMN questions_json TEXT NOT NULL DEFAULT '[]'")
+            if "track" not in columns:
+                db.execute("ALTER TABLE review_items ADD COLUMN track TEXT")
+            for name, declaration in {
+                "research_question": "TEXT", "executive_summary": "TEXT",
+                "observations_json": "TEXT NOT NULL DEFAULT '[]'", "analysis_json": "TEXT NOT NULL DEFAULT '[]'",
+                "counter_evidence_json": "TEXT NOT NULL DEFAULT '[]'", "limitations_json": "TEXT NOT NULL DEFAULT '[]'",
+                "decision_impact_json": "TEXT NOT NULL DEFAULT '[]'", "recommended_actions_json": "TEXT NOT NULL DEFAULT '[]'",
+                "evidence_json": "TEXT NOT NULL DEFAULT '[]'", "confidence_json": "TEXT NOT NULL DEFAULT '{}'",
+                "ai_drafted": "INTEGER NOT NULL DEFAULT 0", "human_reviewed": "INTEGER NOT NULL DEFAULT 0",
+                "review_version": "TEXT", "human_reviewed_at": "TEXT",
+            }.items():
+                if name not in columns:
+                    db.execute(f"ALTER TABLE review_items ADD COLUMN {name} {declaration}")
             eval_columns = {row["name"] for row in db.execute("PRAGMA table_info(eval_reviews)")}
             for name, declaration in {
                 "ai_factuality": "INTEGER", "ai_completeness": "INTEGER", "ai_citation_correctness": "INTEGER",
@@ -205,25 +225,50 @@ class ResearchStore:
                 title_key = normalized_title(item["title"])
                 score, reasons = research_score(item, max(0, counts.get(title_key, 1) - 1))
                 item_id = item.get("id") or "item-" + hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
-                status = "approved" if approved or item.get("reviewed") else "pending"
+                status = "approved" if approved or (item.get("reviewed") and item.get("review", {}).get("humanReviewed", True)) else "pending"
                 reviewed = 1 if status == "approved" else 0
+                confidence_data = item.get("confidence", 0.5)
+                confidence_value = float(confidence_data.get("overall", 0.5) if isinstance(confidence_data, dict) else confidence_data)
+                review = item.get("review") or {}
                 timestamp = utc_now()
                 before = db.total_changes
                 db.execute(
                     """INSERT OR IGNORE INTO review_items
-                    (id,source_id,source_name,source_type,category,entities_json,title,url,published_at,summary,status,
-                     conclusion,why_now,impact_json,action_json,questions_json,priority,confidence,reviewed,research_score,score_reasons_json,
-                     normalized_title,created_at,updated_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                    (item_id, source_id, source_name, source_type, item.get("category", "生态"), json_text(item.get("entities")),
+                    (id,source_id,source_name,source_type,category,track,entities_json,title,url,published_at,summary,status,
+                     conclusion,why_now,impact_json,action_json,questions_json,research_question,executive_summary,
+                     observations_json,analysis_json,counter_evidence_json,limitations_json,decision_impact_json,recommended_actions_json,
+                     evidence_json,confidence_json,ai_drafted,human_reviewed,review_version,human_reviewed_at,
+                     priority,confidence,reviewed,research_score,score_reasons_json,normalized_title,created_at,updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (item_id, source_id, source_name, source_type, item.get("category", "生态"), item.get("track"), json_text(item.get("entities")),
                      item["title"], url, item.get("publishedAt") or source.get("publishedAt"), item.get("summary") or (item.get("evidence") or [{}])[0].get("note", ""), status,
                      item.get("conclusion") or item.get("draftConclusion", ""), item.get("whyNow", ""),
                      json_text(item.get("impact") or item.get("draftImpact")), json_text(item.get("action") or item.get("draftAction")),
-                     json_text(item.get("questions")),
-                     item.get("priority", "medium"), float(item.get("confidence", 0.5)), reviewed, score, json_text(reasons),
+                     json_text(item.get("questions")), item.get("researchQuestion"), item.get("executiveSummary"),
+                     json_text(item.get("observations")), json_text(item.get("analysis")), json_text(item.get("counterEvidence")),
+                     json_text(item.get("limitations")), json_text(item.get("decisionImpact")), json_text(item.get("recommendedActions")),
+                     json_text(item.get("evidence")), json.dumps(confidence_data if isinstance(confidence_data, dict) else {"overall": confidence_value}, ensure_ascii=False),
+                     1 if review.get("aiDrafted") else 0, 1 if review.get("humanReviewed") else 0, review.get("version"), review.get("reviewedAt"),
+                     item.get("priority", "medium"), confidence_value, reviewed, score, json_text(reasons),
                      title_key, item.get("collectedAt", timestamp), timestamp),
                 )
                 inserted += db.total_changes - before
+                if item.get("schemaVersion") == "1.0.0":
+                    db.execute(
+                        """UPDATE review_items SET source_name=?,source_type=?,category=?,track=?,entities_json=?,title=?,url=?,published_at=?,summary=?,
+                        status=?,conclusion=?,why_now=?,impact_json=?,action_json=?,questions_json=?,research_question=?,executive_summary=?,
+                        observations_json=?,analysis_json=?,counter_evidence_json=?,limitations_json=?,decision_impact_json=?,recommended_actions_json=?,
+                        evidence_json=?,confidence_json=?,ai_drafted=?,human_reviewed=?,review_version=?,human_reviewed_at=?,priority=?,confidence=?,reviewed=?,updated_at=?
+                        WHERE id=? AND (review_version IS NULL OR review_version='')""",
+                        (source_name, source_type, item.get("category", "生态"), item.get("track"), json_text(item.get("entities")), item["title"], url,
+                         item.get("publishedAt") or source.get("publishedAt"), item.get("executiveSummary") or item.get("summary") or "", status,
+                         item.get("conclusion", ""), item.get("whyNow", ""), json_text(item.get("impact")), json_text(item.get("action")),
+                         json_text(item.get("questions")), item.get("researchQuestion"), item.get("executiveSummary"), json_text(item.get("observations")),
+                         json_text(item.get("analysis")), json_text(item.get("counterEvidence")), json_text(item.get("limitations")),
+                         json_text(item.get("decisionImpact")), json_text(item.get("recommendedActions")), json_text(item.get("evidence")),
+                         json.dumps(confidence_data, ensure_ascii=False), 1 if review.get("aiDrafted") else 0, 1 if review.get("humanReviewed") else 0,
+                         review.get("version"), review.get("reviewedAt"), item.get("priority", "medium"), confidence_value, reviewed, timestamp, item_id),
+                    )
         return inserted
 
     def bootstrap(self, inbox_path: Path | None = None, signals_path: Path | None = None) -> dict[str, int]:
@@ -234,7 +279,27 @@ class ResearchStore:
         signals_path = signals_path or (DATA / "signals.json")
         inbox = json.loads(inbox_path.read_text(encoding="utf-8")) if inbox_path.exists() else []
         signals = json.loads(signals_path.read_text(encoding="utf-8")) if signals_path.exists() else []
-        return {"inboxImported": self.import_items(inbox), "signalsImported": self.import_items(signals, approved=True)}
+        return {"inboxImported": self.import_items(inbox), "signalsImported": self.import_items(signals)}
+
+    def promote_auto_brief(self, item_id: str, brief_path: Path | None = None) -> dict[str, Any]:
+        brief_path = brief_path or (DATA / "auto-brief.json")
+        brief = json.loads(brief_path.read_text(encoding="utf-8")) if brief_path.exists() else {}
+        source_item = next((item for item in brief.get("items", []) if item.get("id") == item_id), None)
+        if not source_item:
+            raise KeyError(item_id)
+        source = source_item.get("source") or {}
+        promoted_id = "research-" + hashlib.sha256((source.get("url") or item_id).encode("utf-8")).hexdigest()[:16]
+        draft = {
+            "id": promoted_id, "sourceId": source.get("name", "auto-brief"), "sourceName": source.get("name", "公开来源"),
+            "sourceType": source.get("type", "公开来源"), "category": source_item.get("category", "生态"),
+            "entities": source_item.get("entities", []), "title": source_item.get("title", "待命名研究问题"),
+            "url": source.get("url"), "publishedAt": source.get("publishedAt"), "summary": source_item.get("summary", ""),
+            "conclusion": source_item.get("whatChanged", ""), "whyNow": source_item.get("summary", ""),
+            "impact": source_item.get("impact", []), "action": source_item.get("action", []),
+            "priority": "medium", "confidence": source_item.get("confidence", 0.5), "reviewed": False,
+        }
+        self.import_items([draft])
+        return self.get_item(promoted_id) or {}
 
     def import_eval_data(self, review_path: Path | None = None, responses_path: Path | None = None, results_path: Path | None = None) -> int:
         review_paths = [review_path] if review_path else [DATA / "eval-review-template.json", DATA / "model-review.json"]
@@ -290,8 +355,12 @@ class ResearchStore:
             return self._item(row) if row else None
 
     def update_item(self, item_id: str, changes: dict[str, Any]) -> dict[str, Any]:
-        allowed = {"status", "source_name", "source_type", "category", "title", "url", "published_at", "summary", "conclusion", "why_now", "priority", "confidence"}
-        json_fields = {"entities": "entities_json", "impact": "impact_json", "action": "action_json", "questions": "questions_json"}
+        allowed = {"status", "source_name", "source_type", "category", "track", "title", "url", "published_at", "summary", "conclusion", "why_now", "priority", "confidence", "research_question", "executive_summary", "review_version", "ai_drafted", "human_reviewed"}
+        json_fields = {"entities": "entities_json", "impact": "impact_json", "action": "action_json", "questions": "questions_json",
+                       "observations": "observations_json", "analysis": "analysis_json", "counter_evidence": "counter_evidence_json",
+                       "limitations": "limitations_json", "decision_impact": "decision_impact_json",
+                       "recommended_actions": "recommended_actions_json", "evidence": "evidence_json",
+                       "confidence_detail": "confidence_json"}
         assignments, values = [], []
         for key, value in changes.items():
             if key in allowed:
@@ -299,7 +368,7 @@ class ResearchStore:
                     raise ValueError("invalid status")
                 if key == "priority" and value not in VALID_PRIORITIES:
                     raise ValueError("invalid priority")
-                assignments.append(f"{key} = ?"); values.append(value)
+                assignments.append(f"{key} = ?"); values.append(int(value) if key in {"ai_drafted", "human_reviewed"} else value)
             elif key in json_fields:
                 assignments.append(f"{json_fields[key]} = ?"); values.append(json_text(value))
         if not assignments:
@@ -315,12 +384,48 @@ class ResearchStore:
         item = self.get_item(item_id)
         if not item:
             raise KeyError(item_id)
-        missing = [key for key in ("conclusion", "whyNow", "impact", "action", "publishedAt", "url") if not item.get(key)]
-        if missing:
-            raise ValueError("发布前缺少字段: " + ", ".join(missing))
+        errors = self.deep_report_errors(item)
+        if errors:
+            raise ValueError("发布校验未通过: " + "；".join(errors))
         with self.session() as db:
-            db.execute("UPDATE review_items SET status='approved', reviewed=1, updated_at=? WHERE id=?", (utc_now(), item_id))
+            reviewed_at = utc_now()
+            db.execute("UPDATE review_items SET status='approved', reviewed=1, human_reviewed=1, human_reviewed_at=?, updated_at=? WHERE id=?", (reviewed_at, reviewed_at, item_id))
         return self.get_item(item_id) or {}
+
+    @staticmethod
+    def deep_report_errors(item: dict[str, Any]) -> list[str]:
+        required = ("researchQuestion", "executiveSummary", "conclusion", "whyNow", "observations", "analysis",
+                    "counterEvidence", "limitations", "decisionImpact", "recommendedActions", "evidence", "publishedAt", "url")
+        errors = [f"缺少 {key}" for key in required if not item.get(key)]
+        evidence = item.get("evidence") or []
+        ids = {entry.get("id") for entry in evidence if entry.get("id")}
+        if len(evidence) < 2:
+            errors.append("至少需要 2 个具体证据")
+        if not any(any(token in str(entry.get("sourceType", "")) for token in ("厂商官方", "开源项目", "开源评测", "本项目")) for entry in evidence):
+            errors.append("至少需要 1 个一手来源")
+        for entry in evidence:
+            if not all(entry.get(key) for key in ("id", "title", "url", "publishedAt", "accessedAt", "sourceType")):
+                errors.append("证据标题、链接、日期或类型不完整")
+                break
+            if not entry.get("verified"):
+                errors.append(f"证据 {entry.get('id', '?')} 尚未核验")
+        for observation in item.get("observations") or []:
+            linked = observation.get("evidenceIds") or []
+            if not linked or any(ref not in ids for ref in linked):
+                errors.append(f"事实 {observation.get('id', '?')} 未正确关联证据")
+                break
+        body_parts = [str(item.get("executiveSummary") or ""), str(item.get("conclusion") or ""), str(item.get("whyNow") or "")]
+        for key in ("observations", "analysis", "counterEvidence"):
+            body_parts.extend(str(value.get("text", "")) for value in item.get(key) or [])
+        body_parts.extend(str(value or "") for value in item.get("limitations") or [])
+        if len("".join(body_parts)) < 600:
+            errors.append("研究正文不足 600 个字符")
+        if not item.get("humanReviewed"):
+            errors.append("需要项目负责人完成人工确认")
+        confidence = item.get("confidenceDetail") or {}
+        if not all(key in confidence for key in ("overall", "sourceQuality", "evidenceAgreement", "scopeFitness", "rationale")):
+            errors.append("置信度分项或理由不完整")
+        return errors
 
     def summary(self) -> dict[str, int]:
         with self.session() as db:
@@ -490,7 +595,9 @@ class ResearchStore:
     def export_public(self, data_dir: Path | str = DATA) -> dict[str, Any]:
         data_dir = Path(data_dir); data_dir.mkdir(parents=True, exist_ok=True)
         with self.session() as db:
-            approved = [self._item(row) for row in db.execute("SELECT * FROM review_items WHERE status='approved' ORDER BY published_at DESC")]
+            approved = [self._item(row) for row in db.execute(
+                "SELECT * FROM review_items WHERE status='approved' AND reviewed=1 AND human_reviewed=1 ORDER BY published_at DESC"
+            )]
         signals = [self._signal(item) for item in approved]
         generated_at = utc_now()
         actions = []
@@ -498,9 +605,11 @@ class ResearchStore:
             for action in signal["action"]:
                 if action not in actions:
                     actions.append(action)
-        report = {"schemaVersion": "0.7.0", "generatedAt": generated_at, "title": "AI 行业策略周报",
-                  "judgements": [{"signalId": item["id"], "conclusion": item["conclusion"], "whyNow": item["whyNow"],
-                                  "impact": item["impact"], "source": item["source"]} for item in signals[:5]],
+        report = {"schemaVersion": "1.0.0", "generatedAt": generated_at, "title": "AI 行业策略周报",
+                  "judgements": [{"signalId": item["id"], "researchQuestion": item.get("researchQuestion"),
+                                  "executiveSummary": item.get("executiveSummary"), "conclusion": item["conclusion"],
+                                  "whyNow": item["whyNow"], "impact": item["impact"],
+                                  "evidenceCount": len(item.get("evidence", [])), "source": item["source"]} for item in signals[:5]],
                   "nextActions": actions[:8], "reviewedOnly": True}
         timeline = [{"id": item["id"], "occurredAt": item["source"]["publishedAt"], "category": item["category"],
                      "entities": item["entities"], "title": item["title"], "conclusion": item["conclusion"], "source": item["source"]} for item in signals]
@@ -512,18 +621,33 @@ class ResearchStore:
     @staticmethod
     def _item(row: sqlite3.Row) -> dict[str, Any]:
         return {"id": row["id"], "sourceId": row["source_id"], "sourceName": row["source_name"], "sourceType": row["source_type"],
-                "category": row["category"], "entities": parse_json(row["entities_json"], []), "title": row["title"], "url": row["url"],
+                "category": row["category"], "track": row["track"], "entities": parse_json(row["entities_json"], []), "title": row["title"], "url": row["url"],
                 "publishedAt": row["published_at"], "summary": row["summary"], "status": row["status"], "conclusion": row["conclusion"],
                 "whyNow": row["why_now"], "impact": parse_json(row["impact_json"], []), "action": parse_json(row["action_json"], []),
-                "questions": parse_json(row["questions_json"], []),
+                "questions": parse_json(row["questions_json"], []), "researchQuestion": row["research_question"],
+                "executiveSummary": row["executive_summary"], "observations": parse_json(row["observations_json"], []),
+                "analysis": parse_json(row["analysis_json"], []), "counterEvidence": parse_json(row["counter_evidence_json"], []),
+                "limitations": parse_json(row["limitations_json"], []), "decisionImpact": parse_json(row["decision_impact_json"], []),
+                "recommendedActions": parse_json(row["recommended_actions_json"], []), "evidence": parse_json(row["evidence_json"], []),
+                "confidenceDetail": parse_json(row["confidence_json"], {}), "aiDrafted": bool(row["ai_drafted"]),
+                "humanReviewed": bool(row["human_reviewed"]), "reviewVersion": row["review_version"],
+                "humanReviewedAt": row["human_reviewed_at"],
                 "priority": row["priority"], "confidence": row["confidence"], "reviewed": bool(row["reviewed"]),
                 "researchScore": row["research_score"], "scoreReasons": parse_json(row["score_reasons_json"], []), "updatedAt": row["updated_at"]}
 
     @staticmethod
     def _signal(item: dict[str, Any]) -> dict[str, Any]:
-        return {"id": item["id"], "category": item["category"], "title": item["title"], "conclusion": item["conclusion"],
-                "whyNow": item["whyNow"], "impact": item["impact"], "action": item["action"], "entities": item["entities"],
+        return {"id": item["id"], "schemaVersion": "1.0.0", "track": item.get("track", "研究报告"),
+                "category": item["category"], "title": item["title"], "researchQuestion": item.get("researchQuestion"),
+                "executiveSummary": item.get("executiveSummary"), "conclusion": item["conclusion"],
+                "whyNow": item["whyNow"], "observations": item.get("observations", []), "analysis": item.get("analysis", []),
+                "counterEvidence": item.get("counterEvidence", []), "limitations": item.get("limitations", []),
+                "decisionImpact": item.get("decisionImpact", []), "recommendedActions": item.get("recommendedActions", []),
+                "impact": item["impact"], "action": item["action"], "entities": item["entities"],
                 "source": {"name": item["sourceName"], "url": item["url"], "publishedAt": item["publishedAt"], "type": item["sourceType"]},
-                "evidence": [{"label": item["sourceName"], "url": item["url"], "note": (item.get("summary") or "")[:280]}],
+                "evidence": item.get("evidence") or [{"id":"E1", "title": item["sourceName"], "sourceName": item["sourceName"], "url": item["url"], "publishedAt": item["publishedAt"], "accessedAt": utc_now()[:10], "sourceType": item["sourceType"], "evidenceRole":"支持", "note": (item.get("summary") or "")[:280], "verified": True}],
                 "questions": item.get("questions", []),
-                "confidence": item["confidence"], "priority": item["priority"], "status": "已复核", "reviewed": True}
+                "confidence": item.get("confidenceDetail") or {"overall": item["confidence"], "sourceQuality": item["confidence"], "evidenceAgreement": item["confidence"], "scopeFitness": item["confidence"], "rationale":"旧版评分"},
+                "priority": item["priority"], "status": "已复核", "reviewed": True,
+                "review": {"aiDrafted": item.get("aiDrafted", False), "humanReviewed": item.get("humanReviewed", False),
+                           "reviewerRole": "项目负责人", "reviewedAt": item.get("humanReviewedAt"), "version": item.get("reviewVersion") or "1.0"}}

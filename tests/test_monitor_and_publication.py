@@ -24,7 +24,7 @@ class MonitorAndPublicationTests(unittest.TestCase):
 
     def test_publication_excludes_unreviewed_signals(self):
         signals = [
-            {"id": "approved", "reviewed": True, "priority": "high", "confidence": .9, "category": "模型", "title": "T",
+            {"id": "approved", "reviewed": True, "review": {"humanReviewed": True}, "priority": "high", "confidence": .9, "category": "模型", "title": "T",
              "conclusion": "C", "whyNow": "W", "impact": ["I"], "action": ["A"], "entities": ["V"],
              "source": {"name": "Official", "url": "https://example.com/a", "publishedAt": "2026-09-03"}},
             {"id": "pending", "reviewed": False, "conclusion": "Should not appear", "source": {"url": "https://example.com/b"}},
@@ -35,6 +35,15 @@ class MonitorAndPublicationTests(unittest.TestCase):
             self.assertEqual(result["reviewed"], 1)
             self.assertNotIn("Should not appear", (output / "weekly-report.json").read_text(encoding="utf-8"))
             self.assertEqual((root / "feed.xml").read_text(encoding="utf-8").count("<item>"), 1)
+
+    def test_publication_rejects_legacy_review_flag_without_human_confirmation(self):
+        signals = [{"id": "legacy", "reviewed": True, "review": {"humanReviewed": False}, "priority": "high",
+                    "confidence": {"overall": .9}, "conclusion": "Should not appear", "source": {"url": "https://example.com"}}]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = generate(signals, root / "data", root / "reports", datetime(2026, 9, 3, tzinfo=timezone.utc))
+            self.assertEqual(result["reviewed"], 0)
+            self.assertNotIn("Should not appear", (root / "data" / "weekly-report.json").read_text(encoding="utf-8"))
 
     def test_promptfoo_generator_and_deterministic_assertion(self):
         self.assertEqual(len(generate_tests()), 30)
