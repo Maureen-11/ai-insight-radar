@@ -34,6 +34,7 @@ class MonitorAndPublicationTests(unittest.TestCase):
             result = generate(signals, output, reports, datetime(2026, 9, 3, tzinfo=timezone.utc))
             self.assertEqual(result["reviewed"], 1)
             self.assertNotIn("Should not appear", (output / "weekly-report.json").read_text(encoding="utf-8"))
+            self.assertEqual((root / "feed.xml").read_text(encoding="utf-8").count("<item>"), 1)
 
     def test_promptfoo_generator_and_deterministic_assertion(self):
         self.assertEqual(len(generate_tests()), 30)

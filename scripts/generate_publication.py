@@ -16,7 +16,7 @@ def load(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def generate(signals, output: Path, reports: Path, generated_at: datetime):
+def generate(signals, output: Path, reports: Path, generated_at: datetime, feed_path: Path | None = None):
     reviewed = [item for item in signals if item.get("reviewed")]
     priority = {"high": 3, "medium": 2, "low": 1}
     reviewed.sort(key=lambda x: (priority.get(x.get("priority"), 0), x.get("confidence", 0), x.get("source", {}).get("publishedAt", "")), reverse=True)
@@ -47,7 +47,8 @@ def generate(signals, output: Path, reports: Path, generated_at: datetime):
         source = item["source"]
         rss_items.append(f"<item><title>{escape(item['conclusion'])}</title><link>{escape(source['url'])}</link><guid>{escape(item['id'])}</guid><description>{escape('；'.join(item.get('impact', [])))}</description></item>")
     rss = f'<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>AI Insight Radar</title><link>https://maureen-11.github.io/ai-insight-radar/</link><description>Reviewed AI industry signals</description><lastBuildDate>{format_datetime(generated_at)}</lastBuildDate>{"".join(rss_items)}</channel></rss>\n'
-    (ROOT / "feed.xml").write_text(rss, encoding="utf-8")
+    feed_path = feed_path or (output.parent / "feed.xml")
+    feed_path.write_text(rss, encoding="utf-8")
     return {"reviewed": len(reviewed), "report": str(report_path), "rssItems": len(rss_items)}
 
 
@@ -58,4 +59,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
