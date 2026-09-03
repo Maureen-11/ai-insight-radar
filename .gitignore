@@ -13,6 +13,7 @@ work/inbox.json
 work/collection-report.json
 work/page-snapshots.json
 work/page-changes.json
+work/auto-brief-state.json
 work/research.db*
 work/promptfoo/
 .venv/

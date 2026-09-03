@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "0.9.0",
+  "status": "waiting_for_first_run",
+  "generatedAt": null,
+  "windowDays": 7,
+  "humanReviewed": false,
+  "judgements": [],
+  "notice": "AI 自动周报尚未生成。"
+}

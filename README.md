@@ -100,7 +100,30 @@ python scripts/generate_publication.py
 - 官方更新页只保存内容哈希、变化摘要和必要元数据；本机快照在 `work/`，公开端只显示 `data/source-health.json`。
 - 即使网络超时、XML 异常或一个来源失败，也保留已有数据并记录失败来源。
 
-`.github/workflows/research-pipeline.yml` 每天北京时间 08:00 运行，也可手动触发。它把待审核材料上传为 30 天有效的 Actions Artifact，而不是直接写回 `main` 或发布结论；这条人工闸门是有意保留的。
+`.github/workflows/research-pipeline.yml` 每天北京时间 08:00 运行，也可手动触发。待审核原始材料保存为 30 天有效的 Actions Artifact；只有经过字段校验的公开安全汇总会由机器人提交到 `main`。
+
+## v0.9 每日 AI 自动简报
+
+首页采用双轨展示：`data/auto-brief.json` 是 DeepSeek 自动生成、未经人工复核的每日动态；`data/signals.json` 继续只保存人工已复核的研究档案。两类内容不会共享状态标签。
+
+定时任务每天北京时间 08:00 采集 RSS、Atom 和官方页面变化，按日期去重后最多分析 10 条；每日预算硬上限为 ¥1。输出使用严格 JSON 契约，来源名称、URL 和发布日期始终由采集器写入，模型不能改写证据字段。原始文章、API 原始响应和模型思考过程都不会提交。
+
+自动发布需要在 GitHub 仓库配置一次 Secret：
+
+```text
+Settings → Secrets and variables → Actions → New repository secret
+Name: DEEPSEEK_API_KEY
+```
+
+只在 GitHub 的加密输入框粘贴 Key，不要写进代码、Issue 或聊天。缺少 Secret、输出校验失败或所有调用失败时，工作流不会覆盖上一份成功简报。`data/automation-status.json` 区分最近检查时间、最近成功时间和来源实际发布日期；没有新内容时显示“今日已检查，暂无有效更新”。
+
+本地可用 mock 零费用验证完整管线：
+
+```powershell
+python scripts/collect_public_sources.py
+python scripts/monitor_public_pages.py
+python scripts/generate_auto_brief.py
+```
 
 ## 真实 DeepSeek 评测
 
@@ -172,18 +195,19 @@ node --check signal-detail.js
 
 ### What this is
 
-AI Insight Radar is an interview-ready AI market-intelligence and model-evaluation workbench. A local FastAPI/SQLite review desk handles private work-in-progress, while GitHub Pages publishes only reviewed, redacted data.
+AI Insight Radar is an interview-ready AI market-intelligence and model-evaluation workbench. GitHub Pages clearly separates an automatically generated, unreviewed daily brief from reviewed research records; a local FastAPI/SQLite desk handles private work-in-progress.
 
 ### Read this project in English
 
 Start here:
 
-1. **Signal stream** — each reviewed signal states a conclusion, its concrete impact, the recommended next action, and the source link.
-2. **Signal detail** — open `signal.html?id=signal-001` to see why it matters now, evidence, open questions, confidence, priority, and review status.
-3. **Weekly report** — generated from reviewed signals; every judgement links back to a dated public source.
-4. **Model evaluation** — a clearly labelled local demo of comparing quality, latency, and cost on the same scenario. It is not an official benchmark result.
-5. **Capability map** — filter domestic/overseas profiles and keep locally measured evidence separate from linked official information.
-6. **Local review desk** — rank, edit, approve, return, or ignore incoming public signals before exporting them.
+1. **Daily AI brief** — up to ten automatically generated items with source dates and links, always labelled as not human-reviewed.
+2. **Signal stream** — each reviewed signal states a conclusion, its concrete impact, the recommended next action, and the source link.
+3. **Signal detail** — open `signal.html?id=signal-001` to see why it matters now, evidence, open questions, confidence, priority, and review status.
+4. **Weekly report** — separates a seven-day automated observation from reviewed research judgements.
+5. **Model evaluation** — a clearly labelled local comparison of quality, latency, and cost on the same scenario. It is not an official benchmark result.
+6. **Capability map** — filter domestic/overseas profiles and keep locally measured evidence separate from linked official information.
+7. **Local review desk** — rank, edit, approve, return, or ignore incoming public signals before exporting them.
 
 ### Quick start
 
@@ -222,7 +246,9 @@ python -m venv .venv
 
 Open `http://127.0.0.1:4180/admin`. The local database, inbox, page snapshots, model responses, and logs stay under ignored `work/` paths. Do not expose this unauthenticated local admin server to the internet.
 
-The scheduled GitHub Actions pipeline collects public metadata, detects official-page hash changes, produces a reviewed-only report preview, and uploads a manual-review artifact. It intentionally does not commit automated judgements to `main`.
+The scheduled GitHub Actions pipeline runs at 08:00 China Standard Time. It collects public metadata, detects official-page hash changes, asks DeepSeek for a strict structured analysis, validates the result, and commits only the public-safe daily brief, rolling 14-day history, weekly observation, automation status, and source health files. The daily limit is ten items and CNY 1.
+
+Add `DEEPSEEK_API_KEY` once under **Settings → Secrets and variables → Actions**. Never place the key in source code, an issue, or chat. Missing credentials, invalid output, or a total analysis failure leaves the last successful public brief untouched. Raw responses and reasoning are never committed.
 
 ### Model capability map
 
@@ -230,16 +256,15 @@ The capability map keeps two evidence layers separate: **local measurements** sh
 
 `data/models.json`, `data/model-evidence.json`, and the local review database contain the model profiles, evidence records, and human-review queue. EvalScope (Apache-2.0) is an optional standard evaluation/performance backend; Promptfoo (MIT) is configured as an optional regression layer. Neither project source nor UI is copied into this repository.
 
-The current human review queue is explicitly marked **pending**. Until factuality, completeness, citation correctness, and structured-output usability have been sampled by a reviewer, rule-based metrics are not presented as final human experience conclusions.
+The current 15-sample evaluation records AI initial scoring and project-owner confirmation separately. This is not a multi-rater blind study, and the sampled results do not support claiming that one configuration is clearly stronger.
 
 ### Public-source workflow
 
 ```text
 Public feeds and official-page changes
-  → ignored work/ inbox and page-change files
-  → SQLite ranking, human fact check, and research judgement
-  → data/signals.json (reviewed and redacted only)
-  → dated report, vendor timeline, and RSS
+  → AI daily brief (automated, explicitly unreviewed)
+  → SQLite ranking and human fact check (separate path)
+  → data/signals.json (reviewed and redacted research records)
 ```
 
 Run the manual collector with:

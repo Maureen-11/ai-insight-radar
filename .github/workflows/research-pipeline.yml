@@ -1,4 +1,4 @@
-name: Build research inbox and reviewed reports
+name: Publish daily AI brief
 
 on:
   schedule:
@@ -6,7 +6,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: daily-ai-brief
+  cancel-in-progress: false
 
 jobs:
   research-pipeline:
@@ -23,16 +27,39 @@ jobs:
         run: python scripts/collect_public_sources.py
       - name: Detect official page changes
         run: python scripts/monitor_public_pages.py
-      - name: Generate reviewed-only reports and RSS
-        run: python scripts/generate_publication.py
+      - name: Validate DeepSeek secret
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          if [ -z "$DEEPSEEK_API_KEY" ]; then
+            echo "::error::Missing repository secret DEEPSEEK_API_KEY. Public files were not changed."
+            exit 1
+          fi
+      - name: Generate budget-capped public AI brief
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: python scripts/generate_auto_brief.py --live
       - name: Run offline tests
         run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Commit public-safe generated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/auto-brief.json data/auto-brief-history.json data/auto-weekly.json data/automation-status.json data/source-health.json
+          if git diff --cached --quiet; then
+            echo "No public data changes to commit."
+          else
+            git commit -m "data: publish daily AI brief $(date -u +%F)"
+            git push origin HEAD:main
+          fi
       - name: Save processing state
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: work
           key: research-work-${{ github.run_id }}
       - name: Upload manual-review package
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: research-review-${{ github.run_id }}
@@ -41,10 +68,5 @@ jobs:
             work/collection-report.json
             work/page-changes.json
             data/source-health.json
-            data/weekly-report.json
-            data/vendor-timeline.json
-            data/report-manifest.json
-            reports/*.md
-            feed.xml
+            data/automation-status.json
           retention-days: 30
-

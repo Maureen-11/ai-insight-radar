@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.9.0",
+  "status": "waiting_for_first_run",
+  "generatedAt": null,
+  "lastCheckedAt": null,
+  "provider": "DeepSeek API",
+  "model": "deepseek-v4-flash",
+  "promptVersion": "auto-brief-v1",
+  "humanReviewed": false,
+  "itemCount": 0,
+  "actualCostCny": 0,
+  "items": [],
+  "notice": "尚未完成首次自动运行；自动内容不会标记为人工复核。"
+}

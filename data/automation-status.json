@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "0.9.0",
+  "status": "waiting_for_first_run",
+  "lastAttemptAt": null,
+  "lastSuccessfulAt": null,
+  "newItems": 0,
+  "failures": [],
+  "message": "等待首次 GitHub Actions 自动运行。"
+}

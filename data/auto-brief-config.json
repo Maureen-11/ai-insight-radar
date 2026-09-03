@@ -1,0 +1,25 @@
+{
+  "version": "0.9.0",
+  "provider": "DeepSeek API",
+  "baseUrl": "https://api.deepseek.com/chat/completions",
+  "model": "deepseek-v4-flash",
+  "thinking": "disabled",
+  "promptVersion": "auto-brief-v1",
+  "maxItems": 10,
+  "maxPerSource": 2,
+  "freshnessDays": 14,
+  "budgetCny": 1.0,
+  "usdToCny": 7.5,
+  "timeoutSeconds": 60,
+  "maxOutputTokens": 400,
+  "maxInputTokensEstimate": 1400,
+  "pricingSnapshot": {
+    "capturedAt": "2026-09-03",
+    "source": "https://api-docs.deepseek.com/quick_start/pricing/",
+    "currency": "USD per 1M tokens",
+    "basis": "peak rates used as a conservative budget ceiling",
+    "inputCacheHit": 0.014,
+    "inputCacheMiss": 0.44,
+    "output": 1.32
+  }
+}
