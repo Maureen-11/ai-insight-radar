@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from backend.store import ResearchStore, research_score
+from backend.store import ResearchStore, ai_draft_assessment, research_score
 
 
 def item(item_id="one", url="https://example.com/one"):
@@ -55,6 +55,14 @@ class ResearchStoreTests(unittest.TestCase):
         self.assertEqual(self.store.update_item("one", {"status": "needs_verification"})["status"], "needs_verification")
         self.assertEqual(self.store.update_item("one", {"status": "returned"})["status"], "returned")
         self.assertEqual(self.store.update_item("one", {"status": "ignored"})["status"], "ignored")
+
+    def test_ai_draft_flags_wrong_structured_field_mapping(self):
+        case = {"keywords": ["Atlas-1", "2026-08-01", "128K"], "citations": ["DOC-E1"], "required_fields": ["model", "date", "context"]}
+        response = '{"answer":"Atlas-1；2026-08-01；128K","citations":["DOC-E1"],"model":"已提取","date":"已提取","context":"已提取"}'
+        draft = ai_draft_assessment(response, case)
+        self.assertEqual(draft["factuality"], 5)
+        self.assertEqual(draft["structuredUsability"], 2)
+        self.assertEqual(draft["issueType"], "字段映射错误")
 
 
 if __name__ == "__main__":

@@ -35,6 +35,48 @@ def parse_json(value: str | None, fallback: Any) -> Any:
         return fallback
 
 
+def evaluation_case_map() -> dict[str, dict[str, Any]]:
+    path = DATA / "eval-scenarios.json"
+    if not path.exists():
+        return {}
+    dataset = json.loads(path.read_text(encoding="utf-8"))
+    mapped: dict[str, dict[str, Any]] = {}
+    for scenario in dataset.get("scenarios", []):
+        for case in scenario.get("cases", []):
+            mapped[case["id"]] = {"scenario": scenario.get("name", "未分类"), **case}
+    return mapped
+
+
+def ai_draft_assessment(response: str, case: dict[str, Any]) -> dict[str, Any]:
+    """Deterministic, transparent initial assessment; never a human score."""
+    parsed = parse_json(response, {})
+    text = response.lower()
+    expected_keywords = [str(value).lower() for value in case.get("keywords", [])]
+    expected_citations = [str(value).lower() for value in case.get("citations", [])]
+    fields = case.get("required_fields", [])
+    facts_present = all(keyword in text for keyword in expected_keywords)
+    citations_present = all(citation in text for citation in expected_citations)
+    valid_object = isinstance(parsed, dict)
+    values = " ".join(str(parsed.get(field, "")).lower() for field in fields)
+    fields_have_values = bool(fields) and all(keyword in values for keyword in expected_keywords)
+    if fields:
+        structured = 5 if valid_object and fields_have_values else 2 if valid_object else 1
+        completeness = 5 if fields_have_values else 2 if facts_present else 1
+        issue = "字段映射错误" if facts_present and not fields_have_values else "待人工确认"
+    else:
+        structured = 4 if valid_object else 3
+        completeness = 5 if facts_present else 2
+        issue = "待人工确认" if facts_present else "可能遗漏"
+    return {
+        "factuality": 5 if facts_present else 2,
+        "completeness": completeness,
+        "citationCorrectness": 5 if citations_present else 1,
+        "structuredUsability": structured,
+        "issueType": issue,
+        "note": "规则初评：仅核对合成材料中的关键词、引用编号与字段映射；不是人工复核结论。",
+    }
+
+
 def normalized_title(value: str) -> str:
     return re.sub(r"[^a-z0-9\u4e00-\u9fff]+", "", (value or "").lower())
 
@@ -297,8 +339,16 @@ class ResearchStore:
             return [dict(row) for row in db.execute("SELECT * FROM page_changes ORDER BY detected_at DESC LIMIT ?", (min(max(limit, 1), 200),))]
 
     def list_eval_reviews(self) -> list[dict[str, Any]]:
+        cases = evaluation_case_map()
         with self.session() as db:
-            return [dict(row) for row in db.execute("SELECT * FROM eval_reviews ORDER BY configuration, case_id")]
+            output = []
+            for row in db.execute("SELECT * FROM eval_reviews ORDER BY configuration, case_id"):
+                item = dict(row)
+                case = cases.get(item["case_id"], {})
+                item["case"] = case
+                item["aiDraft"] = ai_draft_assessment(item.get("response_excerpt", ""), case) if case else None
+                output.append(item)
+            return output
 
     def update_eval_review(self, configuration: str, case_id: str, changes: dict[str, Any]) -> dict[str, Any]:
         field_map = {"factuality": "factuality", "completeness": "completeness", "citationCorrectness": "citation_correctness",
