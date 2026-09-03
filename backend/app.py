@@ -14,7 +14,7 @@ from .store import DATA, ROOT, ResearchStore
 from scripts.generate_publication import generate as generate_publication
 
 store = ResearchStore()
-app = FastAPI(title="AI Insight Radar Research API", version="0.7.0")
+app = FastAPI(title="AI Insight Radar Research API", version="0.8.0")
 STATIC = Path(__file__).parent / "static"
 app.mount("/admin-assets", StaticFiles(directory=STATIC), name="admin-assets")
 
@@ -59,6 +59,7 @@ def startup() -> None:
     store.initialize()
     store.bootstrap()
     store.import_eval_data()
+    store.persist_ai_drafts()
     store.import_page_changes()
 
 
@@ -130,6 +131,11 @@ def page_changes(limit: int = Query(100, ge=1, le=200)) -> list[dict[str, Any]]:
 @app.get("/api/evaluations/reviews")
 def evaluation_reviews() -> list[dict[str, Any]]:
     return store.list_eval_reviews()
+
+
+@app.get("/api/evaluations/summary")
+def evaluation_summary() -> dict[str, Any]:
+    return store.dual_evaluation_summary()
 
 
 @app.patch("/api/evaluations/reviews/{configuration}/{case_id}")

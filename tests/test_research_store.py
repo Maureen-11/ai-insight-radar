@@ -64,6 +64,28 @@ class ResearchStoreTests(unittest.TestCase):
         self.assertEqual(draft["structuredUsability"], 2)
         self.assertEqual(draft["issueType"], "字段映射错误")
 
+    def test_dual_review_summary_separates_ai_and_human_and_hides_response(self):
+        responses = self.root / "responses.json"
+        responses.write_text(json.dumps([
+            {"configuration": configuration, "caseId": case, "response": '{"answer":"private raw answer"}'}
+            for configuration in ("flash-direct", "flash-thinking", "pro-thinking")
+            for case in ("qa-01", "qa-06", "sum-01", "sum-06", "ext-01")
+        ]), encoding="utf-8")
+        review = self.root / "review.json"
+        review.write_text(json.dumps({"samples": [
+            {"configuration": configuration, "caseId": case}
+            for configuration in ("flash-direct", "flash-thinking", "pro-thinking")
+            for case in ("qa-01", "qa-06", "sum-01", "sum-06", "ext-01")
+        ]}), encoding="utf-8")
+        self.store.import_eval_data(review_path=review, responses_path=responses, results_path=self.root / "missing.json")
+        self.assertEqual(self.store.persist_ai_drafts(), 15)
+        self.assertEqual(self.store.confirm_review_matrix(), 15)
+        summary = self.store.dual_evaluation_summary()
+        self.assertEqual(summary["dualValidationStatus"], "completed")
+        self.assertEqual(summary["humanConfirmed"], 15)
+        self.assertEqual(len(summary["configurations"]), 3)
+        self.assertNotIn("response_excerpt", json.dumps(summary, ensure_ascii=False))
+
 
 if __name__ == "__main__":
     unittest.main()

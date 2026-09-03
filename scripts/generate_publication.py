@@ -25,9 +25,15 @@ def generate(signals, output: Path, reports: Path, generated_at: datetime, feed_
         for action in item.get("action", []):
             if action not in actions: actions.append(action)
     timestamp = generated_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-    report = {"schemaVersion": "0.7.0", "generatedAt": timestamp, "title": "AI 行业策略周报", "reviewedOnly": True,
+    dual_path = output / "eval-dual-review-summary.json"
+    dual = load(dual_path) if dual_path.exists() else None
+    report = {"schemaVersion": "0.8.0", "generatedAt": timestamp, "title": "AI 行业策略周报", "reviewedOnly": True,
               "judgements": [{"signalId": item["id"], "conclusion": item["conclusion"], "whyNow": item.get("whyNow", ""),
                               "impact": item.get("impact", []), "source": item["source"]} for item in reviewed[:5]], "nextActions": actions[:8]}
+    if dual:
+        report["modelEvaluation"] = {"status": dual.get("dualValidationStatus"), "sampleCount": dual.get("sampleCount"),
+                                     "humanConfirmed": dual.get("humanConfirmed"), "findings": dual.get("findings", []),
+                                     "nextActions": dual.get("nextActions", []), "privacy": dual.get("privacy")}
     timeline = [{"id": item["id"], "occurredAt": item["source"].get("publishedAt"), "category": item.get("category"),
                  "entities": item.get("entities", []), "title": item["title"], "conclusion": item["conclusion"], "source": item["source"]} for item in reviewed]
     output.mkdir(parents=True, exist_ok=True); reports.mkdir(parents=True, exist_ok=True)
@@ -38,6 +44,10 @@ def generate(signals, output: Path, reports: Path, generated_at: datetime, feed_
     for index, item in enumerate(report["judgements"], 1):
         lines += [f"## {index}. {item['conclusion']}", "", f"为什么现在：{item['whyNow']}", "", "影响：" + "；".join(item["impact"]), "",
                   f"来源：[{item['source']['name']}]({item['source']['url']}) · {item['source'].get('publishedAt','日期待补')}", ""]
+    if dual:
+        lines += ["## 模型评测双重验证", "", f"状态：{'AI 初评 + 人工确认完成' if dual.get('dualValidationStatus') == 'completed' else '人工确认进行中'}（{dual.get('humanConfirmed', 0)}/{dual.get('sampleCount', 0)}）", ""]
+        lines += [f"- {value}" for value in dual.get("findings", [])] + [""]
+        lines += ["后续动作："] + [f"- {value}" for value in dual.get("nextActions", [])] + [""]
     lines += ["## 下周行动", ""] + [f"- {value}" for value in report["nextActions"]]
     report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     manifest = {"generatedAt": timestamp, "reports": [{"date": path.stem, "path": f"reports/{path.name}"} for path in sorted(reports.glob("*.md"), reverse=True)]}

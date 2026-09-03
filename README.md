@@ -24,11 +24,12 @@ python -m http.server 4173
 
 GitHub Pages 部署完成后，可直接访问：[AI Insight Radar 在线预览](https://maureen-11.github.io/ai-insight-radar/)。若首次部署尚未完成，请等待 GitHub Actions 的 `Deploy GitHub Pages` 工作流显示成功。
 
-## v0.5–v0.7：从静态展示到研究闭环
+## v0.5–v0.8：从静态展示到研究闭环
 
 - **v0.5 研究后台**：FastAPI + SQLite 导入 876 条公开待办，结合来源可信度、时效、关键词、字段完整度和重复度排序；支持忽略、待验证、通过、退回，以及结论、影响、行动和证据编辑。
 - **v0.6 评测闭环**：15 条 DeepSeek 真实输出进入人工抽检队列；事实性、完整性、引用正确性、结构化可用性与 Badcase 类型和自动指标分开保存。Promptfoo 配置用于声明式回归，不复制其源码。
 - **v0.7 情报管线**：定时采集 RSS/Atom、监控官方页面内容哈希、记录来源健康度，生成已审核周报、厂商时间线和 RSS。自动化只生成待处理材料，不自动发布研究判断。
+- **v0.8 人机双重验证**：15 条 DeepSeek 分层样本先由透明规则完成 AI 初评，再由项目负责人逐条确认最终分数；公开端只展示覆盖率、一致性与 Badcase 汇总，不公开原始回答。
 - 公开站仍提供结论—影响—行动卡片、情报详情、模型能力地图和证据链接；本地实测与公开资料不混排。
 
 ## 本地研究后台（v0.5）
@@ -112,6 +113,19 @@ python scripts/run_deepseek_eval.py --live --budget-cny 20
 
 Key 只存在于当前终端会话，不会写入仓库。没有 `--live` 时脚本只运行零费用 mock 流程；mock 结果不会在页面中伪装为真实指标。`data/eval-review-template.json` 是真实运行后的人工抽样复核模板。
 
+### AI 初评 + 人工确认
+
+本项目将 **AI 初评** 和 **人工最终确认** 分开保存，不能互相替代：AI 初评只按公开合成材料中的关键词、引用编号和字段映射给出可解释的规则信号；人工层确认或修改最终评分。当前公开汇总为 `data/eval-dual-review-summary.json`，覆盖三组配置各 5 条、共 15 条分层样本。
+
+本次 15 条最终分数由项目负责人在对话中明确确认，结论是：这组抽样**未显示三种配置有明显体验差异**；主要 Badcase 为总结覆盖不足、条件遗漏和结构化字段映射错误。这不是多评审盲测，也不是官方模型榜单。公开页面不含原始模型回答；本机后台才可查看摘录。
+
+如需在新的本地数据库中重建这次已确认的汇总，运行：
+
+```powershell
+python scripts/confirm_dual_evaluation.py
+python scripts/generate_publication.py
+```
+
 真实运行前，脚本会打印按配置价格、输入 token 估算和输出上限计算的最坏情况费用预估；预估超过传入预算时会拒绝发起请求。
 
 ## v0.4 模型能力地图
@@ -123,7 +137,7 @@ Key 只存在于当前终端会话，不会写入仓库。没有 `--live` 时脚
 
 档案在 `data/models.json`，证据在 `data/model-evidence.json`，人工抽检模板在 `data/model-review.json`。场景对比页将明确展示题集覆盖范围，不把总分伪装成单场景分数。
 
-当前人工抽检队列仍标为**待复核**：在完成事实性、完整性、引用正确性与结构化可用性检查前，页面不会把规则指标写成最终的人类体验结论。
+公开页显示的双重验证状态以 `data/eval-dual-review-summary.json` 为准。即使已完成当前 15 条确认，新增题集、Prompt 或模型配置后也必须重新完成对应抽样，不能沿用本次结论。
 
 EvalScope 是可选的 Apache-2.0 标准评测/性能后端；Promptfoo 是 MIT 许可的声明式回归工具。本仓库只提供 `evals/promptfooconfig.yaml`、Python provider 和确定性断言，没有复制二者源码或 UI。
 

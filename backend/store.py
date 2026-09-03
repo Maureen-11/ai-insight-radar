@@ -164,6 +164,9 @@ class ResearchStore:
                   configuration TEXT NOT NULL, case_id TEXT NOT NULL, response_excerpt TEXT,
                   factuality INTEGER, completeness INTEGER, citation_correctness INTEGER, structured_usability INTEGER,
                   issue_type TEXT NOT NULL DEFAULT '待标注', reviewer_note TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'pending',
+                  ai_factuality INTEGER, ai_completeness INTEGER, ai_citation_correctness INTEGER, ai_structured_usability INTEGER,
+                  ai_issue_type TEXT, ai_note TEXT, ai_completed_at TEXT,
+                  human_confirmed_at TEXT, human_confirmation_source TEXT,
                   updated_at TEXT NOT NULL, PRIMARY KEY(configuration, case_id)
                 );
                 CREATE TABLE IF NOT EXISTS experiment_runs (
@@ -175,6 +178,14 @@ class ResearchStore:
             columns = {row["name"] for row in db.execute("PRAGMA table_info(review_items)")}
             if "questions_json" not in columns:
                 db.execute("ALTER TABLE review_items ADD COLUMN questions_json TEXT NOT NULL DEFAULT '[]'")
+            eval_columns = {row["name"] for row in db.execute("PRAGMA table_info(eval_reviews)")}
+            for name, declaration in {
+                "ai_factuality": "INTEGER", "ai_completeness": "INTEGER", "ai_citation_correctness": "INTEGER",
+                "ai_structured_usability": "INTEGER", "ai_issue_type": "TEXT", "ai_note": "TEXT",
+                "ai_completed_at": "TEXT", "human_confirmed_at": "TEXT", "human_confirmation_source": "TEXT",
+            }.items():
+                if name not in eval_columns:
+                    db.execute(f"ALTER TABLE eval_reviews ADD COLUMN {name} {declaration}")
 
     def import_items(self, items: list[dict[str, Any]], approved: bool = False) -> int:
         counts: dict[str, int] = {}
@@ -346,9 +357,106 @@ class ResearchStore:
                 item = dict(row)
                 case = cases.get(item["case_id"], {})
                 item["case"] = case
-                item["aiDraft"] = ai_draft_assessment(item.get("response_excerpt", ""), case) if case else None
+                calculated = ai_draft_assessment(item.get("response_excerpt", ""), case) if case else None
+                item["aiDraft"] = ({"factuality": item["ai_factuality"], "completeness": item["ai_completeness"],
+                                    "citationCorrectness": item["ai_citation_correctness"], "structuredUsability": item["ai_structured_usability"],
+                                    "issueType": item["ai_issue_type"], "note": item["ai_note"]}
+                                   if item.get("ai_completed_at") else calculated)
+                item["aiCompleted"] = bool(item.get("ai_completed_at"))
+                item["humanConfirmed"] = bool(item.get("human_confirmed_at"))
                 output.append(item)
             return output
+
+    def persist_ai_drafts(self) -> int:
+        """Store transparent rule-based initial assessments separately from human scores."""
+        cases = evaluation_case_map(); updated = 0
+        with self.session() as db:
+            rows = list(db.execute("SELECT configuration, case_id, response_excerpt FROM eval_reviews"))
+            for row in rows:
+                case = cases.get(row["case_id"])
+                if not case:
+                    continue
+                draft = ai_draft_assessment(row["response_excerpt"] or "", case)
+                db.execute("""UPDATE eval_reviews SET ai_factuality=?, ai_completeness=?, ai_citation_correctness=?,
+                           ai_structured_usability=?, ai_issue_type=?, ai_note=?, ai_completed_at=?
+                           WHERE configuration=? AND case_id=?""",
+                           (draft["factuality"], draft["completeness"], draft["citationCorrectness"], draft["structuredUsability"],
+                            draft["issueType"], draft["note"], utc_now(), row["configuration"], row["case_id"]))
+                updated += 1
+        return updated
+
+    @staticmethod
+    def confirmed_review_scores() -> dict[str, dict[str, Any]]:
+        """Project-owner-confirmed final scores for the five stratified cases."""
+        return {
+            "qa-01": {"factuality": 5, "completeness": 3, "citationCorrectness": 5, "structuredUsability": 4,
+                      "issueType": "条件/单位遗漏", "reviewerNote": "答案给出 800 且引用正确，但遗漏一线城市、每晚、元等适用条件。"},
+            "qa-06": {"factuality": 5, "completeness": 3, "citationCorrectness": 5, "structuredUsability": 4,
+                      "issueType": "条件遗漏", "reviewerNote": "答案包含两天和提前一个工作日，但遗漏每月可申请与登记要求。"},
+            "sum-01": {"factuality": 5, "completeness": 2, "citationCorrectness": 5, "structuredUsability": 3,
+                       "issueType": "总结不完整", "reviewerNote": "关键词和引用正确，但未按两句话总结，遗漏标准请求覆盖与长尾请求仍需人工审核。"},
+            "sum-06": {"factuality": 5, "completeness": 2, "citationCorrectness": 5, "structuredUsability": 3,
+                       "issueType": "总结不完整", "reviewerNote": "提到来源和引用卡片，但遗漏用户认可速度，回答过于关键词化。"},
+            "ext-01": {"factuality": 5, "completeness": 2, "citationCorrectness": 5, "structuredUsability": 2,
+                       "issueType": "字段映射错误", "reviewerNote": "事实和引用正确，但真实值未填入 model/date/context 字段，结构化输出不可直接使用。"},
+        }
+
+    def confirm_review_matrix(self, source: str = "project_owner_chat_confirmation") -> int:
+        """Record the project owner's explicit approval of all 15 human-final scores."""
+        matrix = self.confirmed_review_scores(); confirmed = 0
+        with self.session() as db:
+            rows = list(db.execute("SELECT configuration, case_id FROM eval_reviews"))
+            for row in rows:
+                score = matrix.get(row["case_id"])
+                if not score:
+                    continue
+                db.execute("""UPDATE eval_reviews SET factuality=?, completeness=?, citation_correctness=?, structured_usability=?,
+                           issue_type=?, reviewer_note=?, status='complete', human_confirmed_at=?, human_confirmation_source=?, updated_at=?
+                           WHERE configuration=? AND case_id=?""",
+                           (score["factuality"], score["completeness"], score["citationCorrectness"], score["structuredUsability"],
+                            score["issueType"], score["reviewerNote"], utc_now(), source, utc_now(), row["configuration"], row["case_id"]))
+                confirmed += 1
+        return confirmed
+
+    def dual_evaluation_summary(self) -> dict[str, Any]:
+        """Public aggregate only: never includes raw answers or private excerpts."""
+        score_columns = ("factuality", "completeness", "citation_correctness", "structured_usability")
+        labels = {"factuality": "事实性", "completeness": "完整性", "citation_correctness": "引用正确", "structured_usability": "结构可用"}
+        with self.session() as db:
+            rows = [dict(row) for row in db.execute("SELECT * FROM eval_reviews ORDER BY configuration, case_id")]
+        complete = [row for row in rows if row.get("human_confirmed_at") and row.get("ai_completed_at")]
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for row in rows: grouped.setdefault(row["configuration"], []).append(row)
+        configurations = []
+        for configuration, group in grouped.items():
+            metrics, deltas = {}, []
+            for column in score_columns:
+                ai_column = "ai_" + column
+                human = [row[column] for row in group if row.get(column) is not None]
+                ai = [row[ai_column] for row in group if row.get(ai_column) is not None]
+                metrics[labels[column]] = {"aiInitialAverage": round(sum(ai) / len(ai), 2) if ai else None,
+                                           "humanFinalAverage": round(sum(human) / len(human), 2) if human else None}
+                deltas.extend(abs(row[column] - row[ai_column]) for row in group if row.get(column) is not None and row.get(ai_column) is not None)
+            exact = sum(all(row.get(column) == row.get("ai_" + column) for column in score_columns) for row in group)
+            badcases: dict[str, int] = {}
+            for row in group:
+                if row.get("issue_type") and row["issue_type"] != "待标注": badcases[row["issue_type"]] = badcases.get(row["issue_type"], 0) + 1
+            configurations.append({"id": configuration, "sampleCount": len(group), "humanConfirmed": sum(bool(row.get("human_confirmed_at")) for row in group),
+                                   "aiCompleted": sum(bool(row.get("ai_completed_at")) for row in group), "metrics": metrics,
+                                   "meanAbsoluteScoreDifference": round(sum(deltas) / len(deltas), 2) if deltas else None,
+                                   "exactMatchRate": round(exact / len(group) * 100, 1) if group else 0,
+                                   "badcaseDistribution": [{"type": key, "count": value} for key, value in sorted(badcases.items())]})
+        overall_badcases: dict[str, int] = {}
+        for row in complete:
+            if row.get("issue_type") and row["issue_type"] != "待标注": overall_badcases[row["issue_type"]] = overall_badcases.get(row["issue_type"], 0) + 1
+        status = "completed" if len(rows) == 15 and len(complete) == 15 else "human_confirmation_in_progress"
+        return {"schemaVersion": "0.8.0", "generatedAt": utc_now(), "title": "DeepSeek 人机双重评估汇总", "sampleCount": len(rows),
+                "aiCompleted": sum(bool(row.get("ai_completed_at")) for row in rows), "humanConfirmed": sum(bool(row.get("human_confirmed_at")) for row in rows),
+                "dualValidationStatus": status, "humanConfirmationSource": "项目负责人已在对话中确认评分", "configurations": configurations,
+                "overallBadcaseDistribution": [{"type": key, "count": value} for key, value in sorted(overall_badcases.items())],
+                "findings": ["三组配置在这 15 条分层抽样中未显示明显体验差异，不能据此宣传某个配置更强。", "主要问题集中在总结覆盖不足、条件遗漏和结构化字段映射错误。"],
+                "nextActions": ["把遗漏条件、单位和适用范围加入评分断言。", "为总结题增加格式、正反信息与行动项覆盖检查。", "为结构化抽取增加 schema 校验和失败回退后复跑同题集。"],
+                "privacy": "公开页面仅展示汇总、方法和问题分布；原始模型回答只保留在本机忽略目录。"}
 
     def update_eval_review(self, configuration: str, case_id: str, changes: dict[str, Any]) -> dict[str, Any]:
         field_map = {"factuality": "factuality", "completeness": "completeness", "citationCorrectness": "citation_correctness",
@@ -363,13 +471,20 @@ class ResearchStore:
             assignments.append(f"{column}=?"); values.append(value)
         if not assignments:
             raise ValueError("no editable fields")
-        completed = all(changes.get(key) is not None for key in ("factuality", "completeness", "citationCorrectness", "structuredUsability"))
-        assignments.extend(["status=?", "updated_at=?"]); values.extend(["complete" if completed else "pending", utc_now(), configuration, case_id])
         with self.session() as db:
+            existing = db.execute("SELECT * FROM eval_reviews WHERE configuration=? AND case_id=?", (configuration, case_id)).fetchone()
+            if not existing:
+                raise KeyError(f"{configuration}/{case_id}")
+            score_values = {key: changes.get(key, existing[column]) for key, column in field_map.items()
+                            if key in {"factuality", "completeness", "citationCorrectness", "structuredUsability"}}
+            completed = all(value is not None for value in score_values.values())
+            if completed:
+                assignments.extend(["status=?", "human_confirmed_at=?", "human_confirmation_source=?", "updated_at=?"])
+                values.extend(["complete", utc_now(), "local_admin_confirmation", utc_now(), configuration, case_id])
+            else:
+                assignments.extend(["status=?", "updated_at=?"]); values.extend(["pending", utc_now(), configuration, case_id])
             db.execute(f"UPDATE eval_reviews SET {', '.join(assignments)} WHERE configuration=? AND case_id=?", values)
             row = db.execute("SELECT * FROM eval_reviews WHERE configuration=? AND case_id=?", (configuration, case_id)).fetchone()
-            if not row:
-                raise KeyError(f"{configuration}/{case_id}")
             return dict(row)
 
     def export_public(self, data_dir: Path | str = DATA) -> dict[str, Any]:
