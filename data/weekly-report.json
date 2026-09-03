@@ -1,10 +1,110 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-09-03T14:53:31.376449Z",
+  "generatedAt": "2026-09-03T15:03:05.486276Z",
   "title": "AI 行业策略周报",
   "reviewedOnly": true,
-  "judgements": [],
-  "nextActions": [],
+  "judgements": [
+    {
+      "signalId": "signal-003",
+      "researchQuestion": "自动指标和人工体验判断怎样分工，才能既提高评测规模，又避免机器评分自证正确？",
+      "executiveSummary": "自动评分适合批量检查关键词、引用与结构规则，人工确认负责事实支持、完整性和真实可用性；两层结果必须分别保存，并把分歧样本送回下一轮题集和断言。",
+      "conclusion": "可信的模型评测不是“AI 打一个总分”，而是自动筛查、人工确认、Badcase 归因和同题复测组成的版本化闭环。",
+      "whyNow": "模型和 Prompt 更新频繁，仅靠人工全量检查难以扩展，仅靠模型裁判又可能放大评分偏差；团队需要清楚知道哪一层证据回答什么问题。",
+      "impact": [
+        "影响评测可信度：必须分别公开自动信号和人工判断。",
+        "影响迭代效率：分歧和 Badcase 应进入下一版回归集。"
+      ],
+      "evidenceCount": 3,
+      "source": {
+        "name": "本项目双重评估汇总",
+        "url": "data/eval-dual-review-summary.json",
+        "publishedAt": "2026-09-03",
+        "type": "本项目人工确认"
+      }
+    },
+    {
+      "signalId": "signal-002",
+      "researchQuestion": "当模型已经支持很长输入时，哪些指标才能判断它能否可靠进入企业知识库问答？",
+      "executiveSummary": "上下文窗口只说明允许输入的容量，不证明模型能稳定找到、组合并引用正确证据；企业验收应覆盖检索位置、跨段推理、引用正确性和错误定位。",
+      "conclusion": "长上下文是知识工作流的容量条件，不是可靠性结论；是否可上线取决于检索召回、引用正确、跨文档推理和失败可定位性。",
+      "whyNow": "百万级上下文正在成为厂商规格，但企业真正承担的是错引、漏引和无法追溯造成的决策风险。",
+      "impact": [
+        "影响知识库验收：上下文长度不能替代引用与推理测试。",
+        "影响产品体验：需要展示证据、版本与失败状态。"
+      ],
+      "evidenceCount": 3,
+      "source": {
+        "name": "Anthropic long-context experiment",
+        "url": "https://www.anthropic.com/news/prompting-long-context",
+        "publishedAt": "2023-09-23",
+        "type": "厂商公开实验"
+      }
+    },
+    {
+      "signalId": "signal-001",
+      "researchQuestion": "企业采购模型 API 时，怎样把质量、延迟、失败重试和价格合成可执行的选型依据？",
+      "executiveSummary": "模型标价只能解释 token 单价，不能代表完成一次业务任务的真实成本；应在同一题集、同一运行边界下比较任务成功率、端到端延迟、重试率与单题成本。",
+      "conclusion": "模型选型应以“完成一个合格业务任务所需的总成本”为核心，而不是按参数、标称上下文或每百万 token 价格直接排序。",
+      "whyNow": "厂商同时按模型、输入输出、缓存和时段制定价格，模型能力与推理配置也在快速变化；脱离真实任务的静态价格表越来越难支持采购判断。",
+      "impact": [
+        "影响模型采购评估表：从标价比较升级为合格任务成本。",
+        "影响评测流程：自动分数、人工体验和失败样本必须并列。"
+      ],
+      "evidenceCount": 4,
+      "source": {
+        "name": "DeepSeek Models & Pricing",
+        "url": "https://api-docs.deepseek.com/quick_start/pricing/",
+        "publishedAt": "2026-09-03",
+        "type": "厂商官方动态文档"
+      }
+    },
+    {
+      "signalId": "signal-004",
+      "researchQuestion": "当多家产品都能调用工具时，企业 Agent 的差异化会落在哪些可验收能力上？",
+      "executiveSummary": "近期官方产品演进从单次工具调用扩展到托管沙箱、后台任务、远程连接、凭据更新和人工监控；竞争焦点因此从“会不会调用工具”转向“能否长期、安全、可恢复地执行流程”。",
+      "conclusion": "企业 Agent 的产品门槛正在从模型回答质量扩展为执行基础设施与治理体验：状态管理、权限边界、凭据生命周期、人工接管和失败恢复共同决定可用性。",
+      "whyNow": "Agent 开始承担跨系统、长时间和有副作用的任务；一旦进入真实业务，执行失败、权限过宽和无法追踪会直接转化为运营风险。",
+      "impact": [
+        "影响 Agent 路线图：治理与恢复应成为核心功能。",
+        "影响竞品分析：比较单位从模型功能变为任务生命周期。"
+      ],
+      "evidenceCount": 3,
+      "source": {
+        "name": "Google Managed Agents",
+        "url": "https://blog.google/innovation-and-ai/technology/developers-tools/managed-agents-gemini-api/",
+        "publishedAt": "2026-05-19",
+        "type": "厂商官方公告"
+      }
+    },
+    {
+      "signalId": "signal-005",
+      "researchQuestion": "为什么观察开源模型竞争时，不能只看权重发布和排行榜，还要跟踪推理与评测工具链？",
+      "executiveSummary": "近期 EvalScope、OpenCompass 和 vLLM 的版本变化集中在评测契约、指标正确性、性能测试、模型适配、缓存和推理优化；这说明开源竞争已覆盖从能力证明到稳定交付的完整工具链。",
+      "conclusion": "开源模型能否进入生产，不只由权重能力决定；评测可复现性、推理服务效率、硬件适配、观测与升级成本正在成为同等重要的竞争层。",
+      "whyNow": "模型版本和推理栈同步加速更新，企业即使选择同一权重，也可能因为服务框架、评测口径和升级路径不同获得完全不同的成本与稳定性。",
+      "impact": [
+        "影响开源选型：模型权重与部署评测栈必须联合评估。",
+        "影响市场跟踪：Release 和指标修复比 Star 数更接近落地价值。"
+      ],
+      "evidenceCount": 4,
+      "source": {
+        "name": "EvalScope v1.11.1",
+        "url": "https://github.com/modelscope/evalscope/releases/tag/v1.11.1",
+        "publishedAt": "2026-08-31",
+        "type": "开源项目 Release"
+      }
+    }
+  ],
+  "nextActions": [
+    "把现有 Badcase 转成回归断言。",
+    "下一轮增加第二名评审者并计算一致率。",
+    "建立分层长文测试矩阵。",
+    "拆分无引用、错引和证据不支持三类问题。",
+    "扩充业务题并记录一次通过率。",
+    "统一记录重试后的单题成本与 P95 延迟。",
+    "建立 Agent 生命周期竞品矩阵。",
+    "用凭据过期、工具超时和审批失败做异常演练。"
+  ],
   "modelEvaluation": {
     "status": "completed",
     "sampleCount": 15,

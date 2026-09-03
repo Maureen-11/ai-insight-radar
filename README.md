@@ -24,7 +24,7 @@
 - **深度研究报告**：每篇 600–1000 个中文字符，至少两个具体来源且至少一个一手来源；事实通过 `[E1]` 等编号映射到证据。
 - **正式策略周报**：只汇总已完成人工确认的深度报告。自动周报与正式周报状态分开。
 
-当前五篇 v1.0 报告覆盖三篇模型评测/产品体验研究和两篇市场/竞品研究。重写后的草稿已撤销旧版“已复核”状态；只有在项目负责人逐条核对来源、推理、反例和限制后，才允许恢复公开发布。
+当前五篇 v1.0 报告覆盖三篇模型评测/产品体验研究和两篇市场/竞品研究，已由项目负责人于 2026-09-03 确认发布。后续新报告仍必须逐条完成来源、推理、反例和限制的人工核对，才允许进入公开档案。
 
 ## 运行
 
@@ -226,7 +226,7 @@ AI Insight Radar is an evidence-driven AI market-intelligence and model-evaluati
 
 The publication flow is: public source → AI-generated candidate signal → deep research draft → project-owner verification → formal report and weekly strategy brief. Candidate signals never inherit a reviewed status. A deep report must contain 600–1,000 Chinese characters, at least two concrete sources including one first-party source, claim-to-evidence IDs, counterevidence, limitations, decision impact, testable actions, and an explainable confidence breakdown.
 
-The five retained report IDs (`signal-001` through `signal-005`) are currently v1.0 drafts: three cover model evaluation/product experience and two cover market/competitive research. Their former reviewed flags were removed pending a fresh human source and reasoning check.
+The five retained report IDs (`signal-001` through `signal-005`) are published v1.0 reports: three cover model evaluation/product experience and two cover market/competitive research. Each was confirmed by the project owner on 2026-09-03 after a fresh source and reasoning review.
 
 ### Read this project in English
 

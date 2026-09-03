@@ -46,9 +46,9 @@
     "questions": ["真实业务流量中，格式失败与重试会把不同模型的单位任务成本拉开多少？","当质量差距不显著时，采购方愿意为更低的 P95 延迟支付多少溢价？"],
     "confidence": {"overall":0.82,"sourceQuality":0.9,"evidenceAgreement":0.84,"scopeFitness":0.72,"rationale":"价格和本地运行记录可直接核验；任务成本框架得到多类证据支持，但跨厂商效果与真实企业流量尚未实测。"},
     "priority": "high",
-    "status": "待人工确认",
-    "reviewed": false,
-    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
+    "status": "已复核",
+    "reviewed": true,
+    "review": {"aiDrafted":true,"humanReviewed":true,"reviewerRole":"项目负责人","reviewedAt":"2026-09-03","version":"1.0.0"}
   },
   {
     "id": "signal-002",
@@ -96,9 +96,9 @@
     "questions": ["真实企业文档中，引用错误主要来自检索遗漏还是生成阶段错配？","增加证据展示后，用户发现错误和完成人工复核的时间能缩短多少？"],
     "confidence": {"overall":0.84,"sourceQuality":0.88,"evidenceAgreement":0.9,"scopeFitness":0.74,"rationale":"方法证据和本地失效样本方向一致；但企业真实文档、复杂表格与当前跨厂商模型尚未覆盖。"},
     "priority": "high",
-    "status": "待人工确认",
-    "reviewed": false,
-    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
+    "status": "已复核",
+    "reviewed": true,
+    "review": {"aiDrafted":true,"humanReviewed":true,"reviewerRole":"项目负责人","reviewedAt":"2026-09-03","version":"1.0.0"}
   },
   {
     "id": "signal-003",
@@ -146,9 +146,9 @@
     "questions": ["增加第二名评审者后，完整性与结构可用性评分的一致率是多少？","把 Badcase 写成回归断言后，下一版 Prompt 是否真正减少同类错误？"],
     "confidence": {"overall":0.9,"sourceQuality":0.94,"evidenceAgreement":0.92,"scopeFitness":0.84,"rationale":"核心数字来自本项目可追溯记录，方法与开源评测工程实践一致；局限是样本量小且只有一名人工确认者。"},
     "priority": "high",
-    "status": "待人工确认",
-    "reviewed": false,
-    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
+    "status": "已复核",
+    "reviewed": true,
+    "review": {"aiDrafted":true,"humanReviewed":true,"reviewerRole":"项目负责人","reviewedAt":"2026-09-03","version":"1.0.0"}
   },
   {
     "id": "signal-004",
@@ -196,9 +196,9 @@
     "questions": ["不同平台在凭据过期和工具失败时的默认行为是什么？","客户真正愿意为集中治理支付费用，还是把它视为云平台基础能力？"],
     "confidence": {"overall":0.78,"sourceQuality":0.9,"evidenceAgreement":0.86,"scopeFitness":0.62,"rationale":"官方产品演进清晰支持竞争维度变化，但证据集中于单一厂商，缺少跨厂商实测和客户结果。"},
     "priority": "high",
-    "status": "待人工确认",
-    "reviewed": false,
-    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
+    "status": "已复核",
+    "reviewed": true,
+    "review": {"aiDrafted":true,"humanReviewed":true,"reviewerRole":"项目负责人","reviewedAt":"2026-09-03","version":"1.0.0"}
   },
   {
     "id": "signal-005",
@@ -247,8 +247,8 @@
     "questions": ["最新推理框架在目标硬件上的真实收益是否覆盖升级与维护成本？","评测工具修复指标后，历史模型排序有多少结论需要重新解释？"],
     "confidence": {"overall":0.8,"sourceQuality":0.88,"evidenceAgreement":0.86,"scopeFitness":0.66,"rationale":"三个活跃项目的具体 Release 支持工具链竞争判断；但尚未做同硬件安装压测，不能量化生产收益。"},
     "priority": "medium",
-    "status": "待人工确认",
-    "reviewed": false,
-    "review": {"aiDrafted":true,"humanReviewed":false,"reviewerRole":"项目负责人","reviewedAt":null,"version":"1.0-draft"}
+    "status": "已复核",
+    "reviewed": true,
+    "review": {"aiDrafted":true,"humanReviewed":true,"reviewerRole":"项目负责人","reviewedAt":"2026-09-03","version":"1.0.0"}
   }
 ]

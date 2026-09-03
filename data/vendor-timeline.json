@@ -1,1 +1,101 @@
-[]
+[
+  {
+    "id": "signal-003",
+    "occurredAt": "2026-09-03",
+    "category": "模型",
+    "entities": [
+      "DeepSeek",
+      "EvalScope",
+      "OpenCompass",
+      "AI Judge",
+      "Human Review"
+    ],
+    "title": "AI 初评与人工确认如何形成模型评测闭环",
+    "conclusion": "可信的模型评测不是“AI 打一个总分”，而是自动筛查、人工确认、Badcase 归因和同题复测组成的版本化闭环。",
+    "source": {
+      "name": "本项目双重评估汇总",
+      "url": "data/eval-dual-review-summary.json",
+      "publishedAt": "2026-09-03",
+      "type": "本项目人工确认"
+    }
+  },
+  {
+    "id": "signal-002",
+    "occurredAt": "2023-09-23",
+    "category": "产品",
+    "entities": [
+      "Anthropic",
+      "OpenCompass",
+      "NeedleBench",
+      "RAG",
+      "Long Context"
+    ],
+    "title": "长上下文为什么不等于可靠的知识工作流",
+    "conclusion": "长上下文是知识工作流的容量条件，不是可靠性结论；是否可上线取决于检索召回、引用正确、跨文档推理和失败可定位性。",
+    "source": {
+      "name": "Anthropic long-context experiment",
+      "url": "https://www.anthropic.com/news/prompting-long-context",
+      "publishedAt": "2023-09-23",
+      "type": "厂商公开实验"
+    }
+  },
+  {
+    "id": "signal-001",
+    "occurredAt": "2026-09-03",
+    "category": "模型",
+    "entities": [
+      "DeepSeek",
+      "OpenAI",
+      "模型采购",
+      "任务成本"
+    ],
+    "title": "模型选型为什么必须比较单位任务成本",
+    "conclusion": "模型选型应以“完成一个合格业务任务所需的总成本”为核心，而不是按参数、标称上下文或每百万 token 价格直接排序。",
+    "source": {
+      "name": "DeepSeek Models & Pricing",
+      "url": "https://api-docs.deepseek.com/quick_start/pricing/",
+      "publishedAt": "2026-09-03",
+      "type": "厂商官方动态文档"
+    }
+  },
+  {
+    "id": "signal-004",
+    "occurredAt": "2026-05-19",
+    "category": "产品",
+    "entities": [
+      "Google",
+      "Gemini API",
+      "Managed Agents",
+      "MCP",
+      "Agent Governance"
+    ],
+    "title": "企业 Agent 竞争正在转向治理和执行能力",
+    "conclusion": "企业 Agent 的产品门槛正在从模型回答质量扩展为执行基础设施与治理体验：状态管理、权限边界、凭据生命周期、人工接管和失败恢复共同决定可用性。",
+    "source": {
+      "name": "Google Managed Agents",
+      "url": "https://blog.google/innovation-and-ai/technology/developers-tools/managed-agents-gemini-api/",
+      "publishedAt": "2026-05-19",
+      "type": "厂商官方公告"
+    }
+  },
+  {
+    "id": "signal-005",
+    "occurredAt": "2026-08-31",
+    "category": "生态",
+    "entities": [
+      "ModelScope",
+      "EvalScope",
+      "OpenCompass",
+      "vLLM",
+      "开源模型生态"
+    ],
+    "title": "开源模型竞争为什么已扩展到部署与评测生态",
+    "conclusion": "开源模型能否进入生产，不只由权重能力决定；评测可复现性、推理服务效率、硬件适配、观测与升级成本正在成为同等重要的竞争层。",
+    "source": {
+      "name": "EvalScope v1.11.1",
+      "url": "https://github.com/modelscope/evalscope/releases/tag/v1.11.1",
+      "publishedAt": "2026-08-31",
+      "type": "开源项目 Release"
+    }
+  }
+]

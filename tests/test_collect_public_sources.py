@@ -21,13 +21,14 @@ class CollectorTests(unittest.TestCase):
             value = confidence.get("overall") if isinstance(confidence, dict) else confidence
             self.assertTrue(0 <= value <= 1)
 
-    def test_v1_reports_are_deep_traceable_drafts(self):
+    def test_v1_reports_are_deep_traceable_human_confirmed_reports(self):
         signals = collector.read_json(ROOT / "data" / "signals.json", [])
         self.assertEqual([item["id"] for item in signals], [f"signal-{number:03d}" for number in range(1, 6)])
         for signal in signals:
             self.assertEqual(signal.get("schemaVersion"), "1.0.0")
-            self.assertFalse(signal["reviewed"])
-            self.assertFalse(signal["review"]["humanReviewed"])
+            self.assertTrue(signal["reviewed"])
+            self.assertTrue(signal["review"]["humanReviewed"])
+            self.assertEqual(signal["review"]["version"], "1.0.0")
             evidence = signal["evidence"]
             evidence_ids = {entry["id"] for entry in evidence}
             self.assertGreaterEqual(len(evidence), 2)
